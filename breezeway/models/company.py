@@ -37,6 +37,8 @@ class Template(BaseBreezewayModel):
     name: str
     department: Department
 
-    def convert_data_types(self):
-        if not isinstance(self.department, Department):
-            self.department = Department(self.department)
+    @classmethod
+    def preprocess_data(cls, data: dict) -> dict:
+        if 'department' in data:
+            data['department'] = Department(data['department'])
+        return data
