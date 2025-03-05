@@ -1,10 +1,23 @@
-[tool.poetry]
+[project]
 name = "breezeway"
 version = "0.1.0"
+description = "Library for interacting with Breezeway's API."
+license = { text = "MIT" }
+readme = "README.md"
+authors = [
+    { name = "Anthony DeGarimore", email = "Anthony@DeGarimore.com" }
+]
+maintainers = [
+    { name = "Anthony DeGarimore", email = "Anthony@DeGarimore.com" }
+]
+requires-python = ">=3.8"
 
-[tool.poetry.dependencies]
-python = "^3.8"
-httpx = "^0.28.1"
+[project.urls]
+repository = "https://github.com/FastQuack/breezeway-python"
+"Bug Tracker" = "https://github.com/FastQuack/breezeway-python/issues"
+
+[project.dependencies]
+httpx = ">=0.28.1"
 
 [build-system]
 requires = ["poetry-core"]
