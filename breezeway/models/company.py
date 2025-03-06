@@ -12,9 +12,9 @@ class Department(Enum):
     @property
     def name(self) -> str:
         return {
-            Department.HOUSEKEEPING: 'Cleaning',
-            Department.INSPECTION: 'Inspection',
-            Department.MAINTENANCE: 'Maintenance'
+            Department.HOUSEKEEPING: "Cleaning",
+            Department.INSPECTION: "Inspection",
+            Department.MAINTENANCE: "Maintenance",
         }[self]
 
 
