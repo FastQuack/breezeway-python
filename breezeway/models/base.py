@@ -12,7 +12,7 @@ class BaseBreezewayModel:
     def from_json(cls: Type[T], json_data: str | dict) -> T:
         if isinstance(json_data, str):
             json_data = json.loads(json_data)
-        json_data = cls.preprocess_data(json_data)
+        cls.preprocess_data(json_data)
         field_names = {field.name for field in fields(cls)}
         extra_keys = set(json_data.keys()) - field_names
         if extra_keys:
@@ -22,6 +22,6 @@ class BaseBreezewayModel:
         return instance
 
     @classmethod
-    def preprocess_data(cls, data: dict) -> dict:
-        """Method to preprocess JSON data before import as needed."""
-        return data
+    def preprocess_data(cls, data: dict) -> None:
+        """Preprocess JSON data before object creation."""
+        pass

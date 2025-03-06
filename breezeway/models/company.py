@@ -38,7 +38,5 @@ class Template(BaseBreezewayModel):
     department: Department
 
     @classmethod
-    def preprocess_data(cls, data: dict) -> dict:
-        if 'department' in data:
-            data['department'] = Department(data['department'])
-        return data
+    def preprocess_data(cls, data: dict):
+        data['department'] = Department(data['department'])
