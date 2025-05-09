@@ -5,6 +5,8 @@ import typing
 import httpx
 from httpx import Request, Response
 
+from breezeway.errors import AuthenticationError, RateLimitExceeded, APIClientError
+
 
 class JWTAuth(httpx.Auth):
     HEADERS = {'accept': 'application/json'}
@@ -16,6 +18,22 @@ class JWTAuth(httpx.Auth):
         self._access_token = None
         self._refresh_token = None
         self._token_expires_at = 0
+
+    @staticmethod
+    def _handle_response(resp: httpx.Response) -> None:
+        if resp.json() is None: # Breezeway returns 200 with empty body when client_secret is incorrect
+            raise AuthenticationError()
+        if 'error' not in resp.json():
+            return None
+        if resp.json()['error'] == 'inactive client':  # Cant check by code because breezeway returns 200
+            raise AuthenticationError('Inactive client. Check your credentials.')
+        if resp.status_code == 429:
+            raise RateLimitExceeded(resp.json())
+        raise APIClientError(resp.json()['error'])
+
+    @property
+    def authenticated(self) -> bool:
+        return self._access_token is not None and self._refresh_token is not None
 
     def build_authentication_request(self) -> httpx.Request:
         url = self.base_url + '/public/auth/v1/'
@@ -45,10 +63,12 @@ class JWTAuth(httpx.Auth):
             if self._refresh_token:
                 response = yield self.build_refresh_token_request()
                 response.read()
+                self._handle_response(response)
                 self._update_tokens(response)
             else:
                 response = yield self.build_authentication_request()
                 response.read()
+                self._handle_response(response)
                 self._update_tokens(response)
         request.headers['authorization'] = f'JWT {self._access_token}'
         yield request
@@ -58,10 +78,12 @@ class JWTAuth(httpx.Auth):
             if self._refresh_token:
                 response = yield self.build_refresh_token_request()
                 await response.aread()
+                self._handle_response(response)
                 self._update_tokens(response)
             else:
                 response = yield self.build_authentication_request()
                 await response.aread()
+                self._handle_response(response)
                 self._update_tokens(response)
         request.headers['authorization'] = f'JWT {self._access_token}'
         yield request

@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, time, date
 from decimal import Decimal
 from enum import Enum
-from typing import List
 
 from .base import BaseBreezewayModel
 from .company import Department, Subdepartment
@@ -136,9 +135,9 @@ class Assignment(BaseBreezewayModel):
     expires_at: datetime | None  # I'm assuming this is iso format. I don't think I'm able to test.
     type_task_user_status: str
 
-    @classmethod
-    def preprocess_data(cls, data: dict):
-        data['expires_at'] = datetime.fromisoformat(data['expires_at']) if data['expires_at'] else None
+    @staticmethod
+    def preprocess_data(json_data: dict):
+        json_data['expires_at'] = datetime.fromisoformat(json_data['expires_at']) if json_data['expires_at'] else None
 
 
 @dataclass
@@ -150,12 +149,12 @@ class Cost(BaseBreezewayModel):
     type_cost: TypeCost
     updated_at: datetime | None
 
-    @classmethod
-    def preprocess_data(cls, data: dict) -> None:
-        data['cost'] = Decimal(data['cost']) if data['cost'] else None
-        data['created_at'] = datetime.fromisoformat(data['created_at']) if data['created_at'] else None
-        data['type_cost'] = TypeCost(data['type_cost']['code']) if data['type_cost'] else None
-        data['updated_at'] = datetime.fromisoformat(data['updated_at']) if data['updated_at'] else None
+    @staticmethod
+    def preprocess_data(json_data: dict) -> None:
+        json_data['cost'] = Decimal(json_data['cost']) if json_data['cost'] else None
+        json_data['created_at'] = datetime.fromisoformat(json_data['created_at']) if json_data['created_at'] else None
+        json_data['type_cost'] = TypeCost(json_data['type_cost']['code']) if json_data['type_cost'] else None
+        json_data['updated_at'] = datetime.fromisoformat(json_data['updated_at']) if json_data['updated_at'] else None
 
 
 @dataclass
@@ -172,15 +171,16 @@ class TaskSupply(BaseBreezewayModel):
     total_price: Decimal
     unit_cost: Decimal
 
-    @classmethod
-    def preprocess_data(cls, data: dict) -> None:
-        data['markup_pricing_type'] = MarkupType(data['markup_pricing_type']) if data['markup_pricing_type'] else None
-        data['total_price'] = Decimal(data['total_price']) if data['total_price'] else None
-        data['unit_cost'] = Decimal(data['unit_cost']) if data['unit_cost'] else None
+    @staticmethod
+    def preprocess_data(json_data: dict) -> None:
+        json_data['markup_pricing_type'] = MarkupType(json_data['markup_pricing_type']) if json_data['markup_pricing_type'] else None
+        json_data['total_price'] = Decimal(json_data['total_price']) if json_data['total_price'] else None
+        json_data['unit_cost'] = Decimal(json_data['unit_cost']) if json_data['unit_cost'] else None
 
 
 @dataclass
 class TaskTag(BaseBreezewayModel):
+    
     id: int
     name: str
     company_id: int | None
@@ -190,9 +190,9 @@ class TaskTag(BaseBreezewayModel):
 class Task(BaseBreezewayModel):
     id: int
     name: str  # Title
-    assignments: List[Assignment]
+    assignments: list[Assignment]
     bill_to: Payor | None
-    costs: List[Cost]
+    costs: list[Cost]
     created_at: datetime
     created_by: None | str | dict  # TODO: Unknown type. Need to test.
     description: str | None
@@ -200,7 +200,7 @@ class Task(BaseBreezewayModel):
     finished_by: dict  # TODO use a model from people?
     home_id: int
     paused: bool
-    photos: List[dict]  # TODO Unknown what this list looks like.
+    photos: list[dict]  # TODO Unknown what this list looks like.
     rate_paid: str
     rate_type: RateType
     reference_property_id: str | None
@@ -209,10 +209,10 @@ class Task(BaseBreezewayModel):
     scheduled_date: date | None
     scheduled_time: time | None
     started_at: str | None
-    subdepartments: List[Subdepartment]
-    supplies: List[TaskSupply]
-    tags: List[str]
-    task_tags: List[TaskTag]
+    subdepartments: list[Subdepartment]
+    supplies: list[TaskSupply]
+    tags: list[str]
+    task_tags: list[TaskTag]
     template_id: int | None
     total_time: timedelta | None
     type_department: Department
@@ -220,27 +220,27 @@ class Task(BaseBreezewayModel):
     type_task_status: TaskStatus
     updated_at: datetime
 
-    @classmethod
-    def preprocess_data(cls, data: dict):
-        data['assignments'] = [Assignment.from_json(assignment) for assignment in data['assignments']]
-        data['bill_to'] = Payor(data['bill_to']) if data['bill_to'] else None
-        data['costs'] = [Cost.from_json(cost) for cost in data['costs']]
-        data['created_at'] = datetime.fromisoformat(data['created_at']) if data['created_at'] else None
-        data['finished_at'] = datetime.fromisoformat(data['finished_at']) if data['finished_at'] else None
-        data['rate_type'] = RateType(data['rate_type']) if data['rate_type'] else None
-        data['requested_by'] = Requester(data['requested_by']) if data['requested_by'] else None
-        data['scheduled_date'] = date.fromisoformat(data['scheduled_date']) if data['scheduled_date'] else None
-        data['scheduled_time'] = time.fromisoformat(data['scheduled_time']) if data['scheduled_time'] else None
-        data['subdepartments'] = [Subdepartment.from_json(subdepartment) for subdepartment in data['subdepartments']]
-        data['supplies'] = [TaskSupply.from_json(supply) for supply in data['supplies']]
-        data['task_tags'] = [TaskTag.from_json(tag) for tag in data['task_tags']]
-        if data['total_time']:
-            total_time = datetime.fromisoformat(data['total_time'])
-            data['total_time'] = timedelta(hours=total_time.hour, minutes=total_time.minute, seconds=total_time.second)
-        data['type_department'] = Department(data['type_department']) if data['type_department'] else None
-        data['priority'] = Priority(data['priority']) if data['priority'] else None
-        data['type_task_status'] = TaskStatus(data['type_task_status']) if data['type_task_status'] else None
-        data['updated_at'] = datetime.fromisoformat(data['updated_at']) if data['updated_at'] else None
+    @staticmethod
+    def preprocess_data(json_data: dict):
+        json_data['assignments'] = [Assignment.from_json(assignment) for assignment in json_data['assignments']]
+        json_data['bill_to'] = Payor(json_data['bill_to']) if json_data['bill_to'] else None
+        json_data['costs'] = [Cost.from_json(cost) for cost in json_data['costs']]
+        json_data['created_at'] = datetime.fromisoformat(json_data['created_at']) if json_data['created_at'] else None
+        json_data['finished_at'] = datetime.fromisoformat(json_data['finished_at']) if json_data['finished_at'] else None
+        json_data['rate_type'] = RateType(json_data['rate_type']) if json_data['rate_type'] else None
+        json_data['requested_by'] = Requester(json_data['requested_by']) if json_data['requested_by'] else None
+        json_data['scheduled_date'] = date.fromisoformat(json_data['scheduled_date']) if json_data['scheduled_date'] else None
+        json_data['scheduled_time'] = time.fromisoformat(json_data['scheduled_time']) if json_data['scheduled_time'] else None
+        json_data['subdepartments'] = [Subdepartment.from_json(subdepartment) for subdepartment in json_data['subdepartments']]
+        json_data['supplies'] = [TaskSupply.from_json(supply) for supply in json_data['supplies']]
+        json_data['task_tags'] = [TaskTag.from_json(tag) for tag in json_data['task_tags']]
+        if json_data['total_time']:
+            total_time = datetime.fromisoformat(json_data['total_time'])
+            json_data['total_time'] = timedelta(hours=total_time.hour, minutes=total_time.minute, seconds=total_time.second)
+        json_data['type_department'] = Department(json_data['type_department']) if json_data['type_department'] else None
+        json_data['priority'] = Priority(json_data['priority']) if json_data['priority'] else None
+        json_data['type_task_status'] = TaskStatus(json_data['type_task_status']) if json_data['type_task_status'] else None
+        json_data['updated_at'] = datetime.fromisoformat(json_data['updated_at']) if json_data['updated_at'] else None
 
 
 @dataclass
@@ -249,14 +249,14 @@ class Comment(BaseBreezewayModel):
     comment: str
     created_at: datetime
 
-    @classmethod
-    def preprocess_data(cls, data: dict) -> None:
-        data['created_at'] = datetime.fromisoformat(data['created_at']) if data['created_at'] else None
+    @staticmethod
+    def preprocess_data(json_data: dict) -> None:
+        json_data['created_at'] = datetime.fromisoformat(json_data['created_at']) if json_data['created_at'] else None
 
 
 @dataclass
 class TaskRequirement(BaseBreezewayModel):
-    action: List[str]
+    action: list[str]
     home_element_name: str  # TODO: Testing
     note: str | None  # TODO: Testing
     photo_required: bool

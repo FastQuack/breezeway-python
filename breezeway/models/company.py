@@ -37,6 +37,9 @@ class Template(BaseBreezewayModel):
     name: str
     department: Department
 
-    @classmethod
-    def preprocess_data(cls, data: dict):
-        data['department'] = Department(data['department'])
+    @staticmethod
+    def preprocess_data(json_data: dict):
+        json_data['name'] = json_data['template_name']
+        del json_data['template_name']
+        json_data['department'] = Department(json_data['department_code'])
+        del json_data['department_code']

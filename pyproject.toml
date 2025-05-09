@@ -19,5 +19,8 @@ repository = "https://github.com/FastQuack/breezeway-python"
 [project.dependencies]
 httpx = ">=0.28.1"
 
+[project.optional-dependencies]
+dev = ["pytest"]
+
 [build-system]
 requires = ["poetry-core"]

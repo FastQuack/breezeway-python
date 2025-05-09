@@ -21,7 +21,8 @@ class BaseBreezewayModel:
         instance = cls(**filtered_data)
         return instance
 
-    @classmethod
-    def preprocess_data(cls, data: dict) -> None:
+
+    @staticmethod
+    def preprocess_data(data: dict) -> None:
         """Preprocess JSON data before object creation."""
         pass

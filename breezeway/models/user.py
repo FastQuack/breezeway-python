@@ -1,15 +1,39 @@
 from dataclasses import dataclass
 from enum import Enum
 
-from breezeway.models.base import BaseBreezewayModel
-from breezeway.models.company import Department
-from breezeway.models.unit import Group
+from .base import BaseBreezewayModel
+from .company import Department
+from .unit import UnitGroup
 
+class UserRole(Enum):
+    ADMIN = 'administrator'
+    OFFICE = 'office'
+    REPRESENTATIVE = 'representative'
+    SERVICE_PARTNER = 'service_partner'
+    SUPERVISOR = 'supervisor'
 
-class Status(Enum):
+    @property
+    def name(self) -> str:
+        return {
+            UserRole.ADMIN: "Administrator",
+            UserRole.OFFICE: "Office",
+            UserRole.REPRESENTATIVE: "Representative",
+            UserRole.SERVICE_PARTNER: "Service Partner",
+            UserRole.SUPERVISOR: "Supervisor",
+        }[self]
+
+class UserStatus(Enum):
     ACTIVE = 'active'
     INVITED = 'invited'
     INACTIVE = 'inactive'
+
+    @property
+    def name(self) -> str:
+        return {
+            UserStatus.ACTIVE: "Active",
+            UserStatus.INVITED: "Invited",
+            UserStatus.INACTIVE: "Inactive",
+        }[self]
 
 
 @dataclass
@@ -21,14 +45,13 @@ class User(BaseBreezewayModel):
     active: bool
     emails: list[str]
     employee_code: str
-    groups: list[Group]
+    groups: list[UnitGroup]
     shifts: dict
     type_departments: list[Department]
-    type_role: str
+    type_role: UserRole
 
-
-    def convert_data_types(self):
-        if not all(isinstance(department, Department) for department in self.type_departments):
-            self.type_departments = [Department(department) for department in self.type_departments]
-        if not all(isinstance(group, Group) for group in self.groups):
-            self.groups = [Group(**group) for group in self.groups]
+    @staticmethod
+    def preprocess_data(json_data: dict) -> None:
+        json_data['type_departments'] = [Department(department) for department in json_data['type_departments']]
+        json_data['groups'] = [UnitGroup.from_json(group) for group in json_data['groups']]
+        json_data['type_role'] = UserRole(json_data['type_role'])
