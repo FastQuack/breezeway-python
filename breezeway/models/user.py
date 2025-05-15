@@ -1,9 +1,11 @@
-from dataclasses import dataclass
 from enum import Enum
+
+from pydantic import Field
 
 from .base import BaseBreezewayModel
 from .company import Department
 from .unit import UnitGroup
+
 
 class UserRole(Enum):
     ADMIN = 'administrator'
@@ -22,6 +24,7 @@ class UserRole(Enum):
             UserRole.SUPERVISOR: "Supervisor",
         }[self]
 
+
 class UserStatus(Enum):
     ACTIVE = 'active'
     INVITED = 'invited'
@@ -36,7 +39,6 @@ class UserStatus(Enum):
         }[self]
 
 
-@dataclass
 class User(BaseBreezewayModel):
     id: int
     first_name: str
@@ -44,14 +46,23 @@ class User(BaseBreezewayModel):
     accept_decline_tasks: bool
     active: bool
     emails: list[str]
-    employee_code: str
+    code: str | None = Field(alias='employee_code')
     groups: list[UnitGroup]
     shifts: dict
-    type_departments: list[Department]
-    type_role: UserRole
+    departments: list[Department] = Field(alias='type_departments')
+    role: UserRole = Field(alias='type_role')
 
-    @staticmethod
-    def preprocess_data(json_data: dict) -> None:
-        json_data['type_departments'] = [Department(department) for department in json_data['type_departments']]
-        json_data['groups'] = [UnitGroup.from_json(group) for group in json_data['groups']]
-        json_data['type_role'] = UserRole(json_data['type_role'])
+    @property
+    def name(self):
+        return self.first_name + ' ' + self.last_name
+
+    @property
+    def email(self):
+        return self.emails[0] if self.emails else None
+
+
+class InvitedUser(User):
+    def invite(self):
+        """Send an invitation email to the user."""
+        endpoint = f'public/inventory/v1/people/{self.id}/invite'
+        self._request('POST', endpoint)

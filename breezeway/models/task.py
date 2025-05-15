@@ -1,13 +1,34 @@
-from dataclasses import dataclass
 from datetime import datetime, timedelta, time, date
 from decimal import Decimal
-from enum import Enum
+from enum import StrEnum
+from typing import Dict
+
+from pydantic import field_serializer, Field, ConfigDict
 
 from .base import BaseBreezewayModel
 from .company import Department, Subdepartment
 
 
-class Payor(Enum):
+class AssignmentStatus(StrEnum):
+    PENDING = 'pending'
+    ASSIGNED = 'assigned'
+    ACCEPTED = 'accepted'
+
+    @property
+    def name(self) -> str:
+        return {
+            AssignmentStatus.PENDING: "Pending",
+            AssignmentStatus.ASSIGNED: "Assigned",
+            AssignmentStatus.ACCEPTED: "Accepted"
+        }[self]
+
+
+class MarkupType(StrEnum):
+    FLAT_RATE = 'flat_rate'
+    PERCENT = 'percent'
+
+
+class Payor(StrEnum):
     DAMAGE = 'damage'
     GUEST = 'guest'
     INTERNAL = 'internal'
@@ -28,44 +49,27 @@ class Payor(Enum):
         }[self]
 
 
-class TypeCost(Enum):  # TODO: Test that values are correct. Looks like they are actually integer values
-    LABOR = 'labor'
-    INSPECTION = 'inspection'
-    MATERIAL = 'material'
-    EXPENSE = 'expense'
-    TAX = 'tax'
-    SKILLED_LABOR = 'skilled_labor'
-    NON_SKILLED_LABOR = 'non_skilled_labor'
-    MILAGE = 'mileage'
-    MARK_UP = 'mark_up'
-
-    @property
-    def name(self) -> str:
-        return {
-            TypeCost.LABOR: "Labor",
-            TypeCost.MATERIAL: "Materials",
-            TypeCost.EXPENSE: "Expense",
-            TypeCost.TAX: "Tax",
-            TypeCost.SKILLED_LABOR: "Skilled Labor",
-            TypeCost.NON_SKILLED_LABOR: "Non-Skilled Labor",
-            TypeCost.MILAGE: "Mileage",
-            TypeCost.MARK_UP: "Markup"
-        }[self]
+class Priority(StrEnum):
+    URGENT = 'urgent'
+    HIGH = 'high'
+    NORMAL = 'normal'
+    LOW = 'low'
+    WATCH = 'watch'
 
 
-class RateType(Enum):  # TODO Test this Enum
+class RateType(StrEnum):
     HOUR = 'hour'
     PIECE = 'piece'
 
     @property
     def name(self) -> str:
         return {
-            RateType.HOUR: "hourly",
-            RateType.PIECE: "piece"
+            RateType.HOUR: 'hourly',
+            RateType.PIECE: 'piece'
         }[self]
 
 
-class Requester(Enum):
+class Requester(StrEnum):
     OWNER = 'owner'
     GUEST = 'guest'
     GUEST_SURVEY = 'guest_survey'
@@ -91,20 +95,29 @@ class Requester(Enum):
         }[self]
 
 
-class MarkupType(Enum):
-    FLAT_RATE = 'flat_rate'
-    PERCENT = 'percent'
+class TaskRequirementType(StrEnum):
+    CONDITION = 'condition'
+    CHECKLIST = 'checklist'
+    PHOTO = 'photo'
+    COUNT = 'count'
+    TEXT = 'text'
+    YES_NO = 'yes / no'
+    RATING = 'rating'
+
+    @property
+    def name(self) -> str:
+        return {
+            TaskRequirementType.CONDITION: "Condition",
+            TaskRequirementType.CHECKLIST: "Checklist",
+            TaskRequirementType.PHOTO: "Photo",
+            TaskRequirementType.COUNT: "Count",
+            TaskRequirementType.TEXT: "Text",
+            TaskRequirementType.YES_NO: "Yes/No",
+            TaskRequirementType.RATING: "Rating"
+        }[self]
 
 
-class Priority(Enum):
-    URGENT = 'urgent'
-    HIGH = 'high'
-    NORMAL = 'normal'
-    LOW = 'low'
-    WATCH = 'watch'
-
-
-class TaskStatus(Enum):
+class TaskStatus(StrEnum):
     DRAFTED = 'drafted'
     CREATED = 'created'
     IN_PROGRESS = 'in_progress'
@@ -126,141 +139,140 @@ class TaskStatus(Enum):
         }[self]
 
 
-@dataclass
+class TypeCost(StrEnum):
+    LABOR = 'labor'
+    MATERIAL = 'material'
+    EXPENSE = 'expense'
+    TAX = 'tax'
+    SKILLED_LABOR = 'skilled_labor'
+    NON_SKILLED_LABOR = 'non_skilled_labor'
+    MILAGE = 'mileage'
+    MARK_UP = 'mark_up'
+
+    @property
+    def name(self) -> str:
+        return {
+            TypeCost.LABOR: 'Labor',
+            TypeCost.MATERIAL: 'Materials',
+            TypeCost.EXPENSE: 'Expense',
+            TypeCost.TAX: 'Tax',
+            TypeCost.SKILLED_LABOR: 'Skilled Labor',
+            TypeCost.NON_SKILLED_LABOR: 'Non-skilled Labor',
+            TypeCost.MILAGE: 'Mileage',
+            TypeCost.MARK_UP: 'Mark-up'
+        }[self]
+
+    @property
+    def _id(self):
+        return {
+            TypeCost.LABOR: 1,
+            TypeCost.MATERIAL: 2,
+            TypeCost.EXPENSE: 3,
+            TypeCost.TAX: 4,
+            TypeCost.SKILLED_LABOR: 5,
+            TypeCost.NON_SKILLED_LABOR: 6,
+            TypeCost.MILAGE: 7,
+            TypeCost.MARK_UP: 8
+        }
+
+    def serialize(self) -> dict:
+        return {
+            'code': self.value,
+            'id': self._id,
+            'name': self.name
+        }
+
+
 class Assignment(BaseBreezewayModel):
     id: int
     name: str
-    assignee_id: int
-    employee_code: str | int | None  # Unsure what datatype this is
-    expires_at: datetime | None  # I'm assuming this is iso format. I don't think I'm able to test.
-    type_task_user_status: str
-
-    @staticmethod
-    def preprocess_data(json_data: dict):
-        json_data['expires_at'] = datetime.fromisoformat(json_data['expires_at']) if json_data['expires_at'] else None
+    user_id: int = Field(validation_alias='assignee_id', serialization_alias='assignee_id')
+    employee_code: str | None
+    expires_at: datetime | None
+    status: AssignmentStatus = Field(validation_alias='type_task_user_status', serialization_alias='type_task_user_status')
 
 
-@dataclass
+class Comment(BaseBreezewayModel):
+    id: int
+    content: str = Field(validation_alias='comment', serialization_alias='comment')
+    created_at: datetime
+
+
 class Cost(BaseBreezewayModel):
     id: int
-    cost: Decimal
+    amount: Decimal = Field(validation_alias='cost', serialization_alias='cost')
     created_at: datetime
     description: str
-    type_cost: TypeCost
+    category: TypeCost = Field(validation_alias='type_cost', serialization_alias='type_cost')
     updated_at: datetime | None
 
-    @staticmethod
-    def preprocess_data(json_data: dict) -> None:
-        json_data['cost'] = Decimal(json_data['cost']) if json_data['cost'] else None
-        json_data['created_at'] = datetime.fromisoformat(json_data['created_at']) if json_data['created_at'] else None
-        json_data['type_cost'] = TypeCost(json_data['type_cost']['code']) if json_data['type_cost'] else None
-        json_data['updated_at'] = datetime.fromisoformat(json_data['updated_at']) if json_data['updated_at'] else None
+
+class TaskPhoto(BaseBreezewayModel):
+    id: int
+    url: str
 
 
-@dataclass
+class TaskRequirement(BaseBreezewayModel):
+    # Some of these fields can be None with edge cases
+    action: str | list[str]  # Always a list for checklists, even when there is only one line
+    element_name: str | None  = Field(validation_alias='home_element_name', serialization_alias='home_element_name')  # Only populates when requirement is under a first level element
+    note: str | None
+    photo_required: bool  # is False for photo requirements
+    photos: list[str]  # List of urls
+    response: str | None  # condition('good', 'dirty', 'damaged', 'not_working') yes/no('yes', 'no') checklist('check', None), rating('1', '2', '3', '4', '5')
+    section_name: str | None
+    type: TaskRequirementType = Field(validation_alias='type_requirement', serialization_alias='type_requirement')
+
+
 class TaskSupply(BaseBreezewayModel):
     id: int
     name: str
     billable: bool
     description: str
     markup_pricing_type: MarkupType
-    markup_rate: int
+    markup_rate: Decimal
     quantity: int
     size: str
     supply_id: int
     total_price: Decimal
-    unit_cost: Decimal
-
-    @staticmethod
-    def preprocess_data(json_data: dict) -> None:
-        json_data['markup_pricing_type'] = MarkupType(json_data['markup_pricing_type']) if json_data['markup_pricing_type'] else None
-        json_data['total_price'] = Decimal(json_data['total_price']) if json_data['total_price'] else None
-        json_data['unit_cost'] = Decimal(json_data['unit_cost']) if json_data['unit_cost'] else None
+    unit_cost: Decimal  # pre-markup cost
 
 
-@dataclass
 class TaskTag(BaseBreezewayModel):
-    
     id: int
     name: str
-    company_id: int | None
 
 
-@dataclass
 class Task(BaseBreezewayModel):
-    id: int
+    model_config = super().model_config.copy()
+    model_config.update(frozen=False)
+    id: int = Field(frozen=True)
     name: str  # Title
     assignments: list[Assignment]
     bill_to: Payor | None
     costs: list[Cost]
     created_at: datetime
-    created_by: None | str | dict  # TODO: Unknown type. Need to test.
+    created_by: Dict['id': int, 'name': str] | None  # id is a user id. None when created with API
+    department: Department = Field(validation_alias='type_department', serialization_alias='type_department')
     description: str | None
     finished_at: datetime | None
     finished_by: dict  # TODO use a model from people?
     home_id: int
     paused: bool
-    photos: list[dict]  # TODO Unknown what this list looks like.
-    rate_paid: str
+    photos: list[TaskPhoto]
+    priority: Priority = Field(validation_alias='type_priority', serialization_alias='type_priority')
+    rate_paid: str  # example: '0.05 USD'
     rate_type: RateType
     reference_property_id: str | None
     report_url: str
     requested_by: Requester | None
     scheduled_date: date | None
     scheduled_time: time | None
-    started_at: str | None
+    started_at: datetime | None
+    status: TaskStatus = Field(validation_alias='type_task_status', serialization_alias='type_task_status')
     subdepartments: list[Subdepartment]
     supplies: list[TaskSupply]
-    tags: list[str]
-    task_tags: list[TaskTag]
+    task_tags: list[TaskTag] # TODO: tags and task_tags are essentially the same thing
     template_id: int | None
     total_time: timedelta | None
-    type_department: Department
-    type_priority: Priority
-    type_task_status: TaskStatus
     updated_at: datetime
-
-    @staticmethod
-    def preprocess_data(json_data: dict):
-        json_data['assignments'] = [Assignment.from_json(assignment) for assignment in json_data['assignments']]
-        json_data['bill_to'] = Payor(json_data['bill_to']) if json_data['bill_to'] else None
-        json_data['costs'] = [Cost.from_json(cost) for cost in json_data['costs']]
-        json_data['created_at'] = datetime.fromisoformat(json_data['created_at']) if json_data['created_at'] else None
-        json_data['finished_at'] = datetime.fromisoformat(json_data['finished_at']) if json_data['finished_at'] else None
-        json_data['rate_type'] = RateType(json_data['rate_type']) if json_data['rate_type'] else None
-        json_data['requested_by'] = Requester(json_data['requested_by']) if json_data['requested_by'] else None
-        json_data['scheduled_date'] = date.fromisoformat(json_data['scheduled_date']) if json_data['scheduled_date'] else None
-        json_data['scheduled_time'] = time.fromisoformat(json_data['scheduled_time']) if json_data['scheduled_time'] else None
-        json_data['subdepartments'] = [Subdepartment.from_json(subdepartment) for subdepartment in json_data['subdepartments']]
-        json_data['supplies'] = [TaskSupply.from_json(supply) for supply in json_data['supplies']]
-        json_data['task_tags'] = [TaskTag.from_json(tag) for tag in json_data['task_tags']]
-        if json_data['total_time']:
-            total_time = datetime.fromisoformat(json_data['total_time'])
-            json_data['total_time'] = timedelta(hours=total_time.hour, minutes=total_time.minute, seconds=total_time.second)
-        json_data['type_department'] = Department(json_data['type_department']) if json_data['type_department'] else None
-        json_data['priority'] = Priority(json_data['priority']) if json_data['priority'] else None
-        json_data['type_task_status'] = TaskStatus(json_data['type_task_status']) if json_data['type_task_status'] else None
-        json_data['updated_at'] = datetime.fromisoformat(json_data['updated_at']) if json_data['updated_at'] else None
-
-
-@dataclass
-class Comment(BaseBreezewayModel):
-    id: int
-    comment: str
-    created_at: datetime
-
-    @staticmethod
-    def preprocess_data(json_data: dict) -> None:
-        json_data['created_at'] = datetime.fromisoformat(json_data['created_at']) if json_data['created_at'] else None
-
-
-@dataclass
-class TaskRequirement(BaseBreezewayModel):
-    action: list[str]
-    home_element_name: str  # TODO: Testing
-    note: str | None  # TODO: Testing
-    photo_required: bool
-    photos: list
-    response: str  # TODO: testing
-    section_name: str
-    type_requirement: str  # TODO: Enum for Checklist, text, rating etc.

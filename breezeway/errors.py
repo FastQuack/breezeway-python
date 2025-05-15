@@ -11,6 +11,8 @@ class MultipleCompaniesError(APIClientError): pass
 
 class NoCompaniesError(APIClientError): pass
 
+class NotFoundError(APIClientError): pass
+
 class RateLimitExceeded(APIClientError):
     def __init__(self, response: dict | None = None):
         if not response or 'details' not in response or 'message' not in response['details'] or 'retry_after' not in response['details']:

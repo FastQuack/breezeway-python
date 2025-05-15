@@ -1,10 +1,11 @@
-from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
+
+from pydantic import Field
 
 from breezeway.models.base import BaseBreezewayModel
 
 
-class Department(Enum):
+class Department(StrEnum):
     HOUSEKEEPING = 'housekeeping'
     INSPECTION = 'inspection'
     MAINTENANCE = 'maintenance'
@@ -18,28 +19,18 @@ class Department(Enum):
         }[self]
 
 
-@dataclass
 class Company(BaseBreezewayModel):
     id: int
     name: str
     reference_company_id: str | None = None
 
 
-@dataclass
 class Subdepartment(BaseBreezewayModel):
     id: int
     name: str
 
 
-@dataclass
 class Template(BaseBreezewayModel):
     id: int
-    name: str
-    department: Department
-
-    @staticmethod
-    def preprocess_data(json_data: dict):
-        json_data['name'] = json_data['template_name']
-        del json_data['template_name']
-        json_data['department'] = Department(json_data['department_code'])
-        del json_data['department_code']
+    name: str = Field(validation_alias='template_name', serialization_alias='template_name')
+    department: Department = Field(validation_alias='department_code', serialization_alias='department_code')
