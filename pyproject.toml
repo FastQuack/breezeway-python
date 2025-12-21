@@ -1,23 +1,22 @@
 [project]
 name = "breezeway"
-version = "0.1.0"
+version = "0.0.1a2"
 description = "Library for interacting with Breezeway's API."
 license = { text = "MIT" }
 readme = "README.md"
 authors = [
-    { name = "Anthony DeGarimore", email = "Anthony@DeGarimore.com" }
+    { name = "Anthony DeGarimore", email = "anthony@pasoroblesconcierge.com" }
 ]
 maintainers = [
-    { name = "Anthony DeGarimore", email = "Anthony@DeGarimore.com" }
+    { name = "Anthony DeGarimore", email = "anthony@pasoroblesconcierge.com" }
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.13"
 
 [project.urls]
-repository = "https://github.com/FastQuack/breezeway-python"
-"Bug Tracker" = "https://github.com/FastQuack/breezeway-python/issues"
+repository = "https://github.com/Paso-Robles-Vacation-Rentals/breezeway-python"
+"Bug Tracker" = "https://github.com/Paso-Robles-Vacation-Rentals/breezeway-python/issues"
 
-[project.dependencies]
-httpx = ">=0.28.1"
+dependencies = ["httpx>=0.28.1"]
 
 [project.optional-dependencies]
 dev = ["pytest"]
