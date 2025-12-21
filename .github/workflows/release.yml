@@ -10,7 +10,6 @@ on:
 
 env:
   PACKAGE_NAME: "breezeway"
-  OWNER: "Anthony DeGarimore"
 
 jobs:
 

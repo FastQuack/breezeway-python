@@ -1,10 +1,11 @@
-from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
+
+from pydantic import Field
 
 from breezeway.models.base import BaseBreezewayModel
 
 
-class Department(Enum):
+class Department(StrEnum):
     HOUSEKEEPING = 'housekeeping'
     INSPECTION = 'inspection'
     MAINTENANCE = 'maintenance'
@@ -12,31 +13,24 @@ class Department(Enum):
     @property
     def name(self) -> str:
         return {
-            Department.HOUSEKEEPING: 'Cleaning',
-            Department.INSPECTION: 'Inspection',
-            Department.MAINTENANCE: 'Maintenance'
+            Department.HOUSEKEEPING: "Cleaning",
+            Department.INSPECTION: "Inspection",
+            Department.MAINTENANCE: "Maintenance",
         }[self]
 
 
-@dataclass
 class Company(BaseBreezewayModel):
     id: int
     name: str
     reference_company_id: str | None = None
 
 
-@dataclass
 class Subdepartment(BaseBreezewayModel):
     id: int
     name: str
 
 
-@dataclass
 class Template(BaseBreezewayModel):
     id: int
-    name: str
-    department: Department
-
-    def convert_data_types(self):
-        if not isinstance(self.department, Department):
-            self.department = Department(self.department)
+    name: str = Field(validation_alias='template_name', serialization_alias='template_name')
+    department: Department = Field(validation_alias='department_code', serialization_alias='department_code')
