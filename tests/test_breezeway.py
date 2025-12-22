@@ -4,7 +4,6 @@ bw = breezeway.BreezewayClient()
 
 def test_breezeway_auth():
     assert bw.authenticated, 'Breezeway client should be authenticated'
-    bw.company_id
 
 def test_breezeway_company_api():
     assert bw.companies(), 'Companies list is should not be empty'

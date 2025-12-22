@@ -1,45 +1,40 @@
-import asyncio
 from abc import ABC, abstractmethod
+from datetime import date
 from os import getenv
-from typing import Literal
+from typing import Literal, overload, Unpack
 
 import httpx
 
 from .errors import *
 from .models.auth import JWTAuth
 from .models.company import Company, Subdepartment, Template
-from .models.unit import PaginatedUnits, Unit, UnregisteredUnit, UnitTag, UnitPhoto
+from .models.reservation import PaginatedReservations
+from .models.unit import PaginatedUnits, Unit, UnitTag, UnitPhoto
 from .models.user import User, UserStatus, InvitedUser
+from .resources.company import CompanyResource
+from .resources.unit import UnitCreateDict, UnitResource
+from .resources.user import UserResource
 
 
 class BaseBreezewayClient(ABC):
     HEADERS = {'accept': 'application/json'}
 
-    def __init__(self, client_id: str, client_secret: str, base_url: str, company_id: int | None = None):
-        base_url = base_url or 'https://api.breezeway.io'
+    def __init__(self, client_id: str, client_secret: str, base_url: str = 'https://api.breezeway.io', company_id: int | None = None):
+        self.base_url = base_url.rstrip('/')
         client_id = client_id or getenv('BREEZEWAY_CLIENT_ID')
         client_secret = client_secret or getenv('BREEZEWAY_CLIENT_SECRET')
         if not client_id or not client_secret:
-            raise AuthenticationError('client_id and client_secret are required either as parameters or environment variables'
+            raise AuthenticationError('client_id and client_secret are required as parameters or environment variables'
                              'BREEZEWAY_CLIENT_ID and BREEZEWAY_CLIENT_SECRET')
-        self.base_url: str = base_url.rstrip('/')
         self._company_id: int | None = int(company_id) if company_id else company_id
         self.auth: JWTAuth = JWTAuth(self.base_url, client_id, client_secret)
+        self._company_resource = CompanyResource(base_url)
+        self._unit_resource = UnitResource(base_url)
+        self._user_resource = UserResource(base_url)
 
     @abstractmethod
-    def _request(self, method: str, endpoint: str, query_params: dict = None, payload: dict | list= None) -> dict:
+    def _handle_request(self, request: httpx.Request) -> dict:
         pass
-
-    @staticmethod
-    def _filter_query_params(query_params: dict | list | None) -> dict:
-        if query_params is None:
-            return {}
-        return {key: value for key, value in query_params.items() if value is not None}
-
-    def _get_user_data(self, status: UserStatus | None = None) -> dict:
-        endpoint = '/public/inventory/v1/people'
-        query_params = {'status': status.value if status else None}
-        return self._request('GET', endpoint, query_params=query_params)
 
     @staticmethod
     def _handle_response(resp: httpx.Response) -> None:
@@ -58,44 +53,69 @@ class BaseBreezewayClient(ABC):
             raise APIClientError(f"API error: {resp.json()['description']}")
         raise APIClientError()
 
+    # def _get_user_data(self, status: UserStatus | None = None) -> dict:
+    #     endpoint = '/public/inventory/v1/people'
+    #     query_params = {'status': status.value if status else None}
+    #     return self._request('GET', endpoint, query_params=query_params)
+
     @property
     def authenticated(self) -> bool:
         return self.auth.authenticated
 
-    @property
-    def company_id(self) -> int:
-        if self._company_id:
-            return self._company_id
-        companies = self.companies()
-        if not companies:
-            raise NoCompaniesError()
-        elif len(companies) > 1:
-            raise MultipleCompaniesError()
-        self._company_id = companies[0].id
-        return self._company_id
-
-    @company_id.setter
-    def company_id(self, value: int):
-        self._company_id = value
-
-    def companies(self) -> list[Company]:
-        """Get all companies associated with the client."""
-        endpoint = '/public/inventory/v1/companies'
-        return [Company.model_validate(company) for company in self._request('GET', endpoint)]
-
-    def create_unit(self, unit: UnregisteredUnit) -> Unit:
-        """Create a new unit."""
-        endpoint = '/public/inventory/v1/property'
-        payload = unit.model_dump()
-        return Unit.model_validate(self._request('POST', endpoint, payload=payload)).attach_client(self)
-
-    def inactive_users(self) -> list[User]:
-        """Get a list of all inactive users."""
-        return [User.model_validate(user) for user in self._get_user_data(status=UserStatus.INACTIVE)]
-
-    def invited_users(self) -> list[InvitedUser]:
-        """Get a list of all invited users."""
-        return [InvitedUser.model_validate(user).attach_client(self) for user in self._get_user_data(status=UserStatus.INVITED)]
+    def paginated_reservations(
+            self,* ,
+            property_id: int | None = None,
+            company_id: int | None = None,
+            checkin_date_lt: date | None = None,
+            checkin_date_le: date | None = None,
+            checkin_date_gt: date | None = None,
+            checkin_date_ge: date | None = None,
+            checkout_date_lt: date | None = None,
+            checkout_date_le: date | None = None,
+            checkout_date_gt: date | None = None,
+            checkout_date_ge: date | None = None,
+            created_at_lt: date | None = None,
+            created_at_le: date | None = None,
+            created_at_gt: date | None = None,
+            created_at_ge: date | None = None,
+            updated_at_lt: date | None = None,
+            updated_at_le: date | None = None,
+            updated_at_gt: date | None = None,
+            updated_at_ge: date | None = None,
+            limit: int | None = None,
+            page: int | None = None,
+            sort_by: str | None = None,
+            sort_order: Literal['desc', 'asc'] | None = None) -> PaginatedReservations:
+        """Get a paginated list of reservations."""
+        endpoint = 'public/reservation/v1/reservation'
+        query_params = {
+            'property_id': property_id,
+            'company_id': company_id,
+            'checkin_date_lt': checkin_date_lt,
+            'checkin_date_le': checkin_date_le,
+            'checkin_date_gt': checkin_date_gt,
+            'checkin_date_ge': checkin_date_ge,
+            'checkout_date_lt': checkout_date_lt,
+            'checkout_date_le': checkout_date_le,
+            'checkout_date_gt': checkout_date_gt,
+            'checkout_date_ge': checkout_date_ge,
+            'created_at_lt': created_at_lt,
+            'created_at_le': created_at_le,
+            'created_at_gt': created_at_gt,
+            'created_at_ge': created_at_ge,
+            'updated_at_lt': updated_at_lt,
+            'updated_at_le': updated_at_le,
+            'updated_at_gt': updated_at_gt,
+            'updated_at_ge': updated_at_ge,
+            'limit': limit,
+            'page': page,
+            'sort_by': sort_by,
+            'sort_order': sort_order
+        }
+        paginated_reservations = PaginatedReservations.model_validate(self._request('GET', endpoint, query_params=query_params))
+        for reservation in paginated_reservations.results:
+            reservation.attach_client(self)
+        return paginated_reservations
 
     def paginated_units(self, company_id: int | None = None, limit: int | None = None, page: int | None = None, sort_by: str | None = None, sort_order: Literal['desc', 'asc'] | None = None) -> PaginatedUnits:
         """
@@ -114,6 +134,61 @@ class BaseBreezewayClient(ABC):
         for unit in paginated_units.results:
             unit.attach_client(self)
         return paginated_units
+
+    def reservations(
+            self,* ,
+            property_id: int | None = None,
+            company_id: int | None = None,
+            checkin_date_lt: date | None = None,
+            checkin_date_le: date | None = None,
+            checkin_date_gt: date | None = None,
+            checkin_date_ge: date | None = None,
+            checkout_date_lt: date | None = None,
+            checkout_date_le: date | None = None,
+            checkout_date_gt: date | None = None,
+            checkout_date_ge: date | None = None,
+            created_at_lt: date | None = None,
+            created_at_le: date | None = None,
+            created_at_gt: date | None = None,
+            created_at_ge: date | None = None,
+            updated_at_lt: date | None = None,
+            updated_at_le: date | None = None,
+            updated_at_gt: date | None = None,
+            updated_at_ge: date | None = None,
+            limit: int | None = None,
+            sort_by: str | None = None,
+            sort_order: Literal['desc', 'asc'] | None = None):
+        """Get a list of reservations."""
+        endpoint = 'public/reservation/v1/reservation'
+        query_params = {
+            'property_id': property_id,
+            'company_id': company_id,
+            'checkin_date_lt': checkin_date_lt,
+            'checkin_date_le': checkin_date_le,
+            'checkin_date_gt': checkin_date_gt,
+            'checkin_date_ge': checkin_date_ge,
+            'checkout_date_lt': checkout_date_lt,
+            'checkout_date_le': checkout_date_le,
+            'checkout_date_gt': checkout_date_gt,
+            'checkout_date_ge': checkout_date_ge,
+            'created_at_lt': created_at_lt,
+            'created_at_le': created_at_le,
+            'created_at_gt': created_at_gt,
+            'created_at_ge': created_at_ge,
+            'updated_at_lt': updated_at_lt,
+            'updated_at_le': updated_at_le,
+            'updated_at_gt': updated_at_gt,
+            'updated_at_ge': updated_at_ge,
+            'limit': limit,
+            'sort_by': sort_by,
+            'sort_order': sort_order
+        }
+        paginated_reservations = self.paginated_reservations(**query_params)
+        reservations = paginated_reservations.results
+        for page in range(2, paginated_reservations.total_pages + 1):
+            reservations += self.paginated_reservations(**query_params, page=page).results
+        return [reservation.attach_client(self) for reservation in reservations]
+
 
     def set_default_photo_for_unit(self, unit: Unit, photo: UnitPhoto) -> Unit:
         """Set a default photo for a unit."""
@@ -172,23 +247,39 @@ class BaseBreezewayClient(ABC):
         endpoint = f'public/inventory/v1/people/{user_id}'
         return User.model_validate(self._request('GET', endpoint)).attach_client(self)
 
-    def users(self) -> list[User]:
-        """
-        Get a list of all users associated with the company.
-        """
-        return [User.model_validate(user).attach_client(self) for user in self._get_user_data()]
-
 
 class BreezewayClient(BaseBreezewayClient):
     def __init__(self, client_id=None, client_secret=None, base_url=None, company_id: int | None = None):
         super().__init__(client_id, client_secret, base_url, company_id)
         self.client = httpx.Client(auth=self.auth, base_url=self.base_url, headers=self.HEADERS)
 
-    def _request(self, method: str, endpoint: str, query_params: dict | None = None, payload: dict | list = None) -> dict:
-        resp = self.client.request(method, endpoint, json=payload, params=self._filter_query_params(query_params))
-        resp.read()
-        self._handle_response(resp)
-        return resp.json()
+    def _handle_request(self, request: httpx.Request) -> dict:
+        response = self.client.send(request)
+        self._handle_response(response)
+        return response.json()
+
+    def companies(self) -> list[Company]:
+        """Get a list of all companies associated with the client."""
+        request = next(self._company_resource.get_companies())
+        data = self._handle_request(request)
+        return [Company.model_validate(company) for company in data]
+
+    def create_unit(self, **kwargs: Unpack[UnitCreateDict]) -> Unit:
+        """Create a new unit."""
+        request = next(self._unit_resource.create_unit(**kwargs))
+        data = self._handle_request(request)
+        return Unit.model_validate(data).attach_client(self)
+
+    @overload
+    def users(self, status: UserStatus.INVITED) -> list[InvitedUser]: ...
+
+    @overload
+    def users(self, status: UserStatus = UserStatus.ACTIVE) -> list[User]: ...
+
+    def users(self, status: UserStatus = UserStatus.ACTIVE) -> list[User]:
+        request = next(self._user_resource.list_users(status=status))
+        data = self._handle_request(request)
+        return [User.model_validate(user) for user in data]
 
 
 class AsyncBreezewayClient(BaseBreezewayClient):
@@ -196,20 +287,41 @@ class AsyncBreezewayClient(BaseBreezewayClient):
         super().__init__(client_id, client_secret, base_url, company_id)
         self.client = httpx.AsyncClient(auth=self.auth, base_url=self.base_url, headers=self.HEADERS)
 
-    async def _request(self, method: str, endpoint: str, query_params: dict | None = None, payload: dict | list = None) -> dict:
-        resp = await self.client.request(method, endpoint, json=payload, params=self._filter_query_params(query_params))
-        await resp.aread()
-        self._handle_response(resp)
-        return resp.json()
+    async def _handle_request(self, request: httpx.Request) -> dict:
+        response = await self.client.send(request)
+        self._handle_response(response)
+        return response.json()
 
+    async def companies(self) -> list[Company]:
+        """Get a list of all companies associated with the client."""
+        request = next(self._company_resource.get_companies())
+        data = await self._handle_request(request)
+        return [Company.model_validate(company) for company in data]
 
-    async def units(self, company_id: int | None = None, sort_by: str | None = None, sort_order: Literal['desc', 'asc'] | None = None) -> list[Unit]:
-        paginated_units = await self.paginated_units(company_id=company_id, sort_by=sort_by, sort_order=sort_order)
-        units = paginated_units.results
-        tasks = [
-            self.paginated_units(company_id=company_id, page=page, sort_by=sort_by, sort_order=sort_order)
-            for page in range(2, paginated_units.total_pages + 1)
-        ]
-        for result in await asyncio.gather(*tasks):
-            units += result.results
-        return units
+    async def create_unit(self, **kwargs: Unpack[UnitCreateDict]) -> Unit:
+        """Create a new unit."""
+        request = next(self._unit_resource.create_unit(**kwargs))
+        data = await self._handle_request(request)
+        return Unit.model_validate(data).attach_client(self)
+
+    @overload
+    async def users(self, status: UserStatus.INVITED) -> list[InvitedUser]: ...
+
+    @overload
+    async def users(self, status: UserStatus = UserStatus.ACTIVE) -> list[User]: ...
+
+    async def users(self, status: UserStatus = UserStatus.ACTIVE) -> list[User]:
+        request = next(self._user_resource.list_users(status=status))
+        data = await self._handle_request(request)
+        return [User.model_validate(user) for user in data]
+
+    # async def units(self, company_id: int | None = None, sort_by: str | None = None, sort_order: Literal['desc', 'asc'] | None = None) -> list[Unit]:
+    #     paginated_units = await self.paginated_units(company_id=company_id, sort_by=sort_by, sort_order=sort_order)
+    #     units = paginated_units.results
+    #     tasks = [
+    #         self.paginated_units(company_id=company_id, page=page, sort_by=sort_by, sort_order=sort_order)
+    #         for page in range(2, paginated_units.total_pages + 1)
+    #     ]
+    #     for result in await asyncio.gather(*tasks):
+    #         units += result.results
+    #     return units

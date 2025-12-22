@@ -3,7 +3,7 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Dict
 
-from pydantic import field_serializer, Field, ConfigDict
+from pydantic import Field
 
 from .base import BaseBreezewayModel
 from .company import Department, Subdepartment

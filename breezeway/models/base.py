@@ -3,10 +3,9 @@ from typing import TYPE_CHECKING, Self
 
 from pydantic import BaseModel, ConfigDict, PrivateAttr
 
-from breezeway.breezeway_client import BaseBreezewayClient
 
 if TYPE_CHECKING:
-    from breezeway import BreezewayClient
+    from breezeway.breezeway_client import BreezewayClient, BaseBreezewayClient
 
 
 class BaseBreezewayModel(BaseModel):

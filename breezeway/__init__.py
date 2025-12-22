@@ -1,5 +1,6 @@
 from .breezeway_client import BreezewayClient, AsyncBreezewayClient
 from .models.company import Department
+from .models.task import Task
 from .models.unit import Unit, UnitNotes
 from .models.user import User
 
@@ -16,6 +17,9 @@ __all__ = [
     # Property
     'Unit',
     "UnitNotes",
+
+    # Task
+    'Task'
 ]
 
 # Package metadata
