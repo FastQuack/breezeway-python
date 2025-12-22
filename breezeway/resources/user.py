@@ -6,10 +6,6 @@ from .base import BaseResource
 from ..models.user import UserStatus
 
 
-class UserCreateDict(TypedDict):
-    pass  # TODO: MAKE THIS
-
-
 class UserResource(BaseResource):
     def list_users(self, status: UserStatus = UserStatus.ACTIVE) -> Generator[Request, Any, None]:
         """List users with the specified status"""
