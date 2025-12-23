@@ -1,4 +1,4 @@
-from typing import Any, Literal
+from typing import Any, Literal, Mapping
 import httpx
 
 
@@ -11,16 +11,13 @@ class BaseResource:
             self,
             method: Literal['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
             endpoint: str,
-            params: dict[str, Any] | None = None,
-            payload: Any | None = None
+            params: Mapping[str, Any] | None = None,
+            payload: Mapping[str, Any] | None = None
     ) -> httpx.Request:
-
-        # Filter out None values from params to keep URLs clean
-        clean_params = {k: v for k, v in (params or {}).items() if k is not 'self' and v is not None}
 
         return httpx.Request(
             method=method,
             url=f'{self.base_url}{endpoint}',
-            params=clean_params,
+            params=params,
             json=payload
         )

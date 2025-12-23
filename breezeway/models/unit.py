@@ -126,13 +126,3 @@ class Unit(BaseUnit):
         for attr, value in updated_unit.__dict__.items():
             if hasattr(self, attr) and value is not None:
                 setattr(self, attr, value)
-
-
-
-
-class PaginatedUnits(BaseBreezewayModel):
-    limit: int
-    page: int
-    results: list[Unit]
-    total_pages: int
-    total_results: int

@@ -59,10 +59,3 @@ class User(BaseBreezewayModel):
     @property
     def email(self):
         return self.emails[0] if self.emails else None
-
-
-class InvitedUser(User):
-    def invite(self):
-        """Send an invitation email to the user."""
-        endpoint = f'public/inventory/v1/people/{self.id}/invite'
-        self._request('POST', endpoint)

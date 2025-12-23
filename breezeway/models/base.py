@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from typing import TYPE_CHECKING, Self
 
 from pydantic import BaseModel, ConfigDict, PrivateAttr
@@ -20,4 +21,20 @@ class BaseBreezewayModel(BaseModel):
         Attach the BreezewayClient instance to the model.
         """
         self.__setattr__('_client', client)
+        return self
+
+class Paginated[T: BaseBreezewayModel](BaseBreezewayModel):
+    limit: int
+    page: int
+    results: list[T]
+    total_pages: int
+    total_results: int
+
+    def attach_client(self, client: BaseBreezewayClient) -> Self:
+        """
+        Attach the BreezewayClient instance to the paginated model.
+        """
+        super().attach_client(client)
+        for result in self.results:
+            result.attach_client(client)
         return self

@@ -75,10 +75,3 @@ class Reservation(BaseBreezewayModel):
     type_guest: GuestType | None = Field(validation_alias='type_guest:code')
     type_reservation: ReservationType = Field(validation_alias='type_reservation:code')
     type_stay: StayType | None = Field(validation_alias='type_stay:code')
-
-class PaginatedReservations(BaseBreezewayModel):
-    limit: int
-    page: int
-    results: list[Reservation]
-    total_pages: int
-    total_results: int
