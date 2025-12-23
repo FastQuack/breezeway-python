@@ -1,8 +1,8 @@
-from typing import TypedDict, Unpack, Literal, Never
+from typing import TypedDict, Unpack
 
 from httpx import Request
 
-from .base import BaseResource
+from .base import BaseResource, ListDict
 from ..models.unit import UnitStatus, UnitNotes
 
 class UnitCreateDict(TypedDict):
@@ -28,25 +28,18 @@ class UnitCreateDict(TypedDict):
     wifi_password: str | None
     company_id: int | None  # required if using cross-company access
 
-class UnitListDict(TypedDict):
-    limit: int | None  # Defaults to 100
-    page: int | None  # Defaults to 1
-    sort_by: str | None  # Defaults to 'created_at'
-    sort_order: Literal['desc', 'asc'] | None  # Defaults to 'desc'
-    company_id: int | None  # required if using cross-company access
-
-class UnitListAllDict(UnitListDict):
-    page: Never
-
 
 class UnitResource(BaseResource):
     def create_unit(self, **kwargs: Unpack[UnitCreateDict]) -> Request:
-        """Create a new property"""
+        """
+        Create a new property.
+        Company ID is required for clients with multi-company access.
+        """
         endpoint = '/public/inventory/v1/property'
         payload = kwargs
         return self._build_request('POST', endpoint, payload=payload)
 
-    def list_units(self, **kwargs: Unpack[UnitListDict]) -> Request:
+    def list_units(self, **kwargs: Unpack[ListDict]) -> Request:
         """
         Get a paginated list of units.
         Company ID is required for clients with multi-company access.

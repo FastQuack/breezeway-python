@@ -3,18 +3,21 @@ from abc import ABC, abstractmethod
 from os import getenv
 from typing import Unpack, NoReturn, Any
 
-import httpx
+from httpx import AsyncClient, Client, Request, Response
 
 from .errors import *
 from .models.auth import JWTAuth
 from .models.base import Paginated
 from .models.company import Company, Subdepartment, Template
 from .models.reservation import Reservation
+from .models.task import Task
 from .models.unit import Unit, UnitTag, UnitPhoto
 from .models.user import User, UserStatus
+from .resources.base import ListDict, ListAllDict
 from .resources.company import CompanyResource
 from .resources.reservation import ReservationListDict, ReservationResource
-from .resources.unit import UnitCreateDict, UnitResource, UnitListDict, UnitListAllDict
+from .resources.task import TaskResource, TaskListWithHomeID, TaskListWithReferencePropertyID
+from .resources.unit import UnitCreateDict, UnitResource
 from .resources.user import UserResource
 
 
@@ -31,15 +34,16 @@ class BaseBreezewayClient(ABC):
         self._company_id: int | None = int(company_id) if company_id else company_id
         self.auth: JWTAuth = JWTAuth(self.base_url, client_id, client_secret)
         self._company_resource = CompanyResource(base_url)
+        self._task_resource = TaskResource(base_url)
         self._unit_resource = UnitResource(base_url)
         self._user_resource = UserResource(base_url)
 
     @abstractmethod
-    def _process_request(self, request: httpx.Request) -> Any:
+    def _process_request(self, request: Request) -> Any:
         pass
 
     @staticmethod
-    def _handle_response_error(resp: httpx.Response) -> NoReturn:
+    def _handle_response_error(resp: Response) -> NoReturn:
             if resp.json()['error'] == 'inactive client':
                 raise AuthenticationError('Inactive client. Check your credentials.')
             if resp.status_code == 403:
@@ -52,7 +56,7 @@ class BaseBreezewayClient(ABC):
                 raise APIClientError(f"API error: {resp.json()['description']}")
             raise APIClientError()
 
-    def _process_response(self, resp: httpx.Response) -> Any:
+    def _process_response(self, resp: Response) -> Any:
         data = resp.json()
         if isinstance(data, dict) and 'error' in data:
             self._handle_response_error(resp)
@@ -66,9 +70,9 @@ class BaseBreezewayClient(ABC):
 class BreezewayClient(BaseBreezewayClient):
     def __init__(self, client_id=None, client_secret=None, base_url=None, company_id: int | None = None):
         super().__init__(client_id, client_secret, base_url, company_id)
-        self.client = httpx.Client(auth=self.auth, base_url=self.base_url, headers=self.HEADERS)
+        self.client = Client(auth=self.auth, base_url=self.base_url, headers=self.HEADERS)
 
-    def _process_request(self, request: httpx.Request) -> Any:
+    def _process_request(self, request: Request) -> Any:
         response = self.client.send(request)
         return self._process_response(response)
 
@@ -107,6 +111,15 @@ class BreezewayClient(BaseBreezewayClient):
         data = self._process_request(request)
         return [Subdepartment.model_validate(subdepartment) for subdepartment in data]
 
+    def list_tasks(self, **kwargs: Unpack[TaskListWithHomeID | TaskListWithReferencePropertyID]) -> Paginated[Task]:
+        """
+        Get a paginated list of tasks.
+        Company ID is required for clients with multi-company access.
+        """
+        request = self._task_resource.list_tasks(**kwargs)
+        data = self._process_request(request)
+        return Paginated[Task].model_validate(data).attach_client(self)
+
     def list_templates(self, company_id: int | None = None) -> list[Template]:
         """
         Get a list of all active task templates associated with the company.
@@ -116,7 +129,7 @@ class BreezewayClient(BaseBreezewayClient):
         data = self._process_request(request)
         return [Template.model_validate(template) for template in data]
 
-    def list_units(self, **kwargs: Unpack[UnitListDict]) -> Paginated[Unit]:
+    def list_units(self, **kwargs: Unpack[ListDict]) -> Paginated[Unit]:
         """
         Get a paginated list of units.
         Company ID is required for clients with multi-company access.
@@ -167,7 +180,7 @@ class BreezewayClient(BaseBreezewayClient):
         data = self._process_request(request)
         return UnitPhoto.model_validate(data)
 
-    def units(self, **kwargs: Unpack[UnitListAllDict]) -> list[Unit]:
+    def units(self, **kwargs: Unpack[ListAllDict]) -> list[Unit]:
         """
         Get a list of all units.
         Company ID is required for clients with multi-company access.
@@ -182,9 +195,9 @@ class BreezewayClient(BaseBreezewayClient):
 class AsyncBreezewayClient(BaseBreezewayClient):
     def __init__(self, client_id=None, client_secret=None, base_url=None, company_id: int | None = None):
         super().__init__(client_id, client_secret, base_url, company_id)
-        self.client = httpx.AsyncClient(auth=self.auth, base_url=self.base_url, headers=self.HEADERS)
+        self.client = AsyncClient(auth=self.auth, base_url=self.base_url, headers=self.HEADERS)
 
-    async def _process_request(self, request: httpx.Request) -> Any:
+    async def _process_request(self, request: Request) -> Any:
         response = await self.client.send(request)
         return self._process_response(response)
 
@@ -232,7 +245,7 @@ class AsyncBreezewayClient(BaseBreezewayClient):
         data = await self._process_request(request)
         return [Template.model_validate(template) for template in data]
 
-    async def list_units(self, **kwargs: Unpack[UnitListDict]) -> Paginated[Unit]:
+    async def list_units(self, **kwargs: Unpack[ListDict]) -> Paginated[Unit]:
         """
         Get a paginated list of units.
         Company ID is required for clients with multi-company access.
@@ -283,7 +296,7 @@ class AsyncBreezewayClient(BaseBreezewayClient):
         data = await self._process_request(request)
         return UnitPhoto.model_validate(data)
 
-    async def units(self, **kwargs: Unpack[UnitListAllDict]) -> list[Unit]:
+    async def units(self, **kwargs: Unpack[ListAllDict]) -> list[Unit]:
         """
         Get a list of all units.
         Company ID is required for clients with multi-company access.
