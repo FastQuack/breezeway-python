@@ -207,6 +207,11 @@ class Cost(BaseBreezewayModel):
     updated_at: datetime | None
 
 
+class TaskCreator(BaseBreezewayModel):
+    id: int
+    name: str
+
+
 class TaskPhoto(BaseBreezewayModel):
     id: int
     url: str
@@ -244,7 +249,7 @@ class TaskTag(BaseBreezewayModel):
 
 
 class Task(BaseBreezewayModel):
-    model_config = super().model_config.copy()
+    model_config = BaseBreezewayModel.model_config.copy()
     model_config.update(frozen=False)
     id: int = Field(frozen=True)
     name: str  # Title
@@ -252,7 +257,7 @@ class Task(BaseBreezewayModel):
     bill_to: Payor | None
     costs: list[Cost]
     created_at: datetime
-    created_by: Dict['id': int, 'name': str] | None  # id is a user id. None when created with API
+    created_by: TaskCreator | None
     department: Department = Field(validation_alias='type_department', serialization_alias='type_department')
     description: str | None
     finished_at: datetime | None
