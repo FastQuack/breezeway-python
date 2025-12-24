@@ -262,7 +262,6 @@ class Task(BaseBreezewayModel):
     description: str | None
     finished_at: datetime | None
     finished_by: dict  # TODO use a model from people?
-    home_id: int
     paused: bool
     photos: list[TaskPhoto]
     priority: Priority = Field(validation_alias='type_priority', serialization_alias='type_priority')
@@ -280,4 +279,13 @@ class Task(BaseBreezewayModel):
     task_tags: list[TaskTag] # TODO: tags and task_tags are essentially the same thing
     template_id: int | None
     total_time: timedelta | None
+    unit_id: int = Field(validation_alias='home_id', serialization_alias='home_id')
     updated_at: datetime
+
+    @property
+    def is_closed(self) -> bool:
+        return self.status in (TaskStatus.CLOSED, TaskStatus.APPROVED)
+
+    @property
+    def is_started(self) -> bool:
+        return self.status in (TaskStatus.IN_PROGRESS, TaskStatus.CLOSED, TaskStatus.APPROVED)

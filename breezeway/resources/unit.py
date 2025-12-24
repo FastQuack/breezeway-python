@@ -36,8 +36,7 @@ class UnitResource(BaseResource):
         Company ID is required for clients with multi-company access.
         """
         endpoint = '/public/inventory/v1/property'
-        payload = kwargs
-        return self._build_request('POST', endpoint, payload=payload)
+        return self._build_request('POST', endpoint, payload=kwargs)
 
     def list_units(self, **kwargs: Unpack[ListDict]) -> Request:
         """
@@ -45,10 +44,9 @@ class UnitResource(BaseResource):
         Company ID is required for clients with multi-company access.
         """
         endpoint = 'public/inventory/v1/property'
-        params = kwargs
-        return self._build_request('GET', endpoint, params=params)
+        return self._build_request('GET', endpoint, params=kwargs)
 
-    def list_unit_tags(self, company_id):
+    def list_unit_tags(self, company_id) -> Request:
         """
         List unit tags configured for a Breezeway company
         Creation of company tags must be performed within the app.

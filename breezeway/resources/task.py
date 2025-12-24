@@ -1,13 +1,29 @@
+from datetime import time, date
 from typing import TypedDict, Unpack, Literal, Never
 
 from httpx import Request
 
 from .base import BaseResource, DateRange
-from ..models.task import Department
+from ..models.task import Department, Priority, RateType, Requester
 
 
-class TaskCreateDict(TypedDict):
-    pass
+class TaskCreateDict(TypedDict, total=False):
+    home_id: int
+    reference_property_id: int
+    name: str
+    type_department: Department
+    type_priority: Priority
+    description: str
+    template_id: int
+    schedule_date: date
+    schedule_time: time
+    assignments: list[int]
+    tags: list[int]
+    subdepartment_id: int
+    rate_paid: float
+    rate_type: RateType
+    requested_by: Requester
+    assign_default_workers: bool
 
 
 class BaseTaskListDict(TypedDict, total=False):
@@ -36,7 +52,11 @@ class TaskListWithReferencePropertyID(BaseTaskListDict):
 
 class TaskResource(BaseResource):
     def create_task(self, **kwargs: Unpack[TaskCreateDict]) -> Request:
-        pass
+        """
+        Create a new task.
+        """
+        endpoint = 'public/inventory/v1/task'
+        return self._build_request('POST', endpoint, payload=kwargs)
 
     def list_tasks(self, **kwargs: Unpack[TaskListWithHomeID | TaskListWithReferencePropertyID]) -> Request:
         """
@@ -44,11 +64,4 @@ class TaskResource(BaseResource):
         Company ID is required for clients with multi-company access.
         """
         endpoint = 'public/inventory/v1/property'
-        params = kwargs
-        return self._build_request('GET', endpoint, params=params)
-
-    def list_task_tags(self, company_id):
-        pass
-
-    def retrieve_task(self, unit_id: int) -> Request:
-        pass
+        return self._build_request('GET', endpoint, params=kwargs)

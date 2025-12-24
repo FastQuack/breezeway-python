@@ -1,30 +1,37 @@
+from __future__ import annotations
+
 import asyncio
 from abc import ABC, abstractmethod
 from os import getenv
-from typing import Unpack, NoReturn, Any
+from typing import Unpack, NoReturn, Any, TYPE_CHECKING
 
 from httpx import AsyncClient, Client, Request, Response
 
 from .errors import *
 from .models.auth import JWTAuth
-from .models.base import Paginated
-from .models.company import Company, Subdepartment, Template
-from .models.reservation import Reservation
-from .models.task import Task
-from .models.unit import Unit, UnitTag, UnitPhoto
-from .models.user import User, UserStatus
-from .resources.base import ListDict, ListAllDict
 from .resources.company import CompanyResource
-from .resources.reservation import ReservationListDict, ReservationResource
-from .resources.task import TaskResource, TaskListWithHomeID, TaskListWithReferencePropertyID
-from .resources.unit import UnitCreateDict, UnitResource
+from .resources.reservation import ReservationResource
+from .resources.task import TaskResource
+from .resources.unit import UnitResource
 from .resources.user import UserResource
+
+if TYPE_CHECKING:
+    from .models.base import Paginated
+    from .models.company import Company, Subdepartment, Template
+    from .models.reservation import Reservation
+    from .models.task import Task
+    from .models.unit import Unit, UnitTag, UnitPhoto
+    from .models.user import User, UserStatus
+    from .resources.base import ListDict, ListAllDict
+    from .resources.reservation import ReservationListDict
+    from .resources.task import TaskListWithHomeID, TaskListWithReferencePropertyID
+    from .resources.unit import UnitCreateDict
 
 
 class BaseBreezewayClient(ABC):
     HEADERS = {'accept': 'application/json'}
 
-    def __init__(self, client_id: str, client_secret: str, base_url: str = 'https://api.breezeway.io', company_id: int | None = None):
+    def __init__(self, client_id: str, client_secret: str, base_url: str, company_id: int | None = None):
         self.base_url = base_url.rstrip('/')
         client_id = client_id or getenv('BREEZEWAY_CLIENT_ID')
         client_secret = client_secret or getenv('BREEZEWAY_CLIENT_SECRET')
@@ -68,7 +75,13 @@ class BaseBreezewayClient(ABC):
 
 
 class BreezewayClient(BaseBreezewayClient):
-    def __init__(self, client_id=None, client_secret=None, base_url=None, company_id: int | None = None):
+    def __init__(
+            self,
+            client_id: str = None,
+            client_secret: str = None,
+            base_url: str = 'https://api.breezeway.com',
+            company_id: int | None = None
+    ):
         super().__init__(client_id, client_secret, base_url, company_id)
         self.client = Client(auth=self.auth, base_url=self.base_url, headers=self.HEADERS)
 
@@ -93,7 +106,7 @@ class BreezewayClient(BaseBreezewayClient):
         data = self._process_request(request)
         return Unit.model_validate(data).attach_client(self)
 
-    def list_reservations(self, **kwargs: Unpack[ReservationListDict]) -> Paginated[Reservation]:
+    def reservations(self, **kwargs: Unpack[ReservationListDict]) -> Paginated[Reservation]:
         """
         Get a paginated list of reservations.
         Company ID is required for clients with multi-company access.
@@ -102,7 +115,7 @@ class BreezewayClient(BaseBreezewayClient):
         data = self._process_request(request)
         return Paginated[Reservation].model_validate(data).attach_client(self)
 
-    def list_subdepartments(self, company_id: int | None = None, reference_company_id: str | None = None) -> list[Subdepartment]:
+    def subdepartments(self, company_id: int | None = None, reference_company_id: str | None = None) -> list[Subdepartment]:
         """
         Get a list of all subdepartments associated with the company.
         Company ID is required for clients with multi-company access.
@@ -111,7 +124,7 @@ class BreezewayClient(BaseBreezewayClient):
         data = self._process_request(request)
         return [Subdepartment.model_validate(subdepartment) for subdepartment in data]
 
-    def list_tasks(self, **kwargs: Unpack[TaskListWithHomeID | TaskListWithReferencePropertyID]) -> Paginated[Task]:
+    def tasks(self, **kwargs: Unpack[TaskListWithHomeID | TaskListWithReferencePropertyID]) -> Paginated[Task]:
         """
         Get a paginated list of tasks.
         Company ID is required for clients with multi-company access.
@@ -120,7 +133,7 @@ class BreezewayClient(BaseBreezewayClient):
         data = self._process_request(request)
         return Paginated[Task].model_validate(data).attach_client(self)
 
-    def list_templates(self, company_id: int | None = None) -> list[Template]:
+    def templates(self, company_id: int | None = None) -> list[Template]:
         """
         Get a list of all active task templates associated with the company.
         Company ID is required for clients with multi-company access.
@@ -129,7 +142,7 @@ class BreezewayClient(BaseBreezewayClient):
         data = self._process_request(request)
         return [Template.model_validate(template) for template in data]
 
-    def list_units(self, **kwargs: Unpack[ListDict]) -> Paginated[Unit]:
+    def units(self, **kwargs: Unpack[ListDict]) -> Paginated[Unit]:
         """
         Get a paginated list of units.
         Company ID is required for clients with multi-company access.
@@ -138,7 +151,7 @@ class BreezewayClient(BaseBreezewayClient):
         data = self._process_request(request)
         return Paginated[Unit].model_validate(data).attach_client(self)
 
-    def list_unit_tags(self, company_id: int | None = None) -> list[UnitTag]:
+    def unit_tags(self, company_id: int | None = None) -> list[UnitTag]:
         """
         List unit tags configured for a Breezeway company
         Creation of company tags must be performed within the app.
@@ -148,7 +161,7 @@ class BreezewayClient(BaseBreezewayClient):
         data = self._process_request(request)
         return [UnitTag.model_validate(tag) for tag in data]
 
-    def list_users(self, status: UserStatus = UserStatus.ACTIVE) -> list[User]:
+    def users(self, status: UserStatus | None) -> list[User]:
         """
         Get a list of users associated with the client.
         """
@@ -156,7 +169,7 @@ class BreezewayClient(BaseBreezewayClient):
         data = self._process_request(request)
         return [User.model_validate(user).attach_client(self) for user in data]
 
-    def retrieve_unit(self, unit_id: int) -> Unit:
+    def unit(self, unit_id: int) -> Unit:
         """
         Retrieve a unit by its Breezeway ID.
         """
@@ -164,7 +177,7 @@ class BreezewayClient(BaseBreezewayClient):
         data = self._process_request(request)
         return Unit.model_validate(data).attach_client(self)
 
-    def retrieve_user(self, user_id: int) -> User:
+    def user(self, user_id: int) -> User:
         """
         Retrieve a user by their ID.
         """
@@ -180,20 +193,26 @@ class BreezewayClient(BaseBreezewayClient):
         data = self._process_request(request)
         return UnitPhoto.model_validate(data)
 
-    def units(self, **kwargs: Unpack[ListAllDict]) -> list[Unit]:
+    def all_units(self, **kwargs: Unpack[ListAllDict]) -> list[Unit]:
         """
         Get a list of all units.
         Company ID is required for clients with multi-company access.
         """
-        paginated_units = self.list_units(**kwargs)
+        paginated_units = self.units(**kwargs)
         units = paginated_units.results
         for page in range(2, paginated_units.total_pages + 1):
-            units += self.list_units(page=page, **kwargs).results
+            units += self.units(page=page, **kwargs).results
         return units
 
 
 class AsyncBreezewayClient(BaseBreezewayClient):
-    def __init__(self, client_id=None, client_secret=None, base_url=None, company_id: int | None = None):
+    def __init__(
+            self,
+            client_id: str = None,
+            client_secret: str = None,
+            base_url: str = 'https://api.breezeway.com',
+            company_id: int | None = None
+    ):
         super().__init__(client_id, client_secret, base_url, company_id)
         self.client = AsyncClient(auth=self.auth, base_url=self.base_url, headers=self.HEADERS)
 
@@ -218,7 +237,7 @@ class AsyncBreezewayClient(BaseBreezewayClient):
         data = await self._process_request(request)
         return Unit.model_validate(data).attach_client(self)
 
-    async def list_reservations(self, **kwargs: Unpack[ReservationListDict]) -> Paginated[Reservation]:
+    async def reservations(self, **kwargs: Unpack[ReservationListDict]) -> Paginated[Reservation]:
         """
         Get a paginated list of reservations.
         Company ID is required for clients with multi-company access.
@@ -227,7 +246,7 @@ class AsyncBreezewayClient(BaseBreezewayClient):
         data = await self._process_request(request)
         return Paginated[Reservation].model_validate(data).attach_client(self)
 
-    async def list_subdepartments(self, company_id: int | None = None, reference_company_id: str | None = None) -> list[Subdepartment]:
+    async def subdepartments(self, company_id: int | None = None, reference_company_id: str | None = None) -> list[Subdepartment]:
         """
         Get a list of all subdepartments associated with the company.
         Company ID is required for clients with multi-company access.
@@ -236,7 +255,7 @@ class AsyncBreezewayClient(BaseBreezewayClient):
         data = await self._process_request(request)
         return [Subdepartment.model_validate(subdepartment) for subdepartment in data]
 
-    async def list_templates(self, company_id: int | None = None) -> list[Template]:
+    async def templates(self, company_id: int | None = None) -> list[Template]:
         """
         Get a list of all active task templates associated with the company.
         Company ID is required for clients with multi-company access.
@@ -245,7 +264,7 @@ class AsyncBreezewayClient(BaseBreezewayClient):
         data = await self._process_request(request)
         return [Template.model_validate(template) for template in data]
 
-    async def list_units(self, **kwargs: Unpack[ListDict]) -> Paginated[Unit]:
+    async def units(self, **kwargs: Unpack[ListDict]) -> Paginated[Unit]:
         """
         Get a paginated list of units.
         Company ID is required for clients with multi-company access.
@@ -254,7 +273,7 @@ class AsyncBreezewayClient(BaseBreezewayClient):
         data = await self._process_request(request)
         return Paginated[Unit].model_validate(data).attach_client(self)
 
-    async def list_unit_tags(self, company_id: int | None = None) -> list[UnitTag]:
+    async def unit_tags(self, company_id: int | None = None) -> list[UnitTag]:
         """
         List unit tags configured for a Breezeway company
         Creation of company tags must be performed within the app.
@@ -264,7 +283,7 @@ class AsyncBreezewayClient(BaseBreezewayClient):
         data = await self._process_request(request)
         return [UnitTag.model_validate(tag) for tag in data]
 
-    async def list_users(self, status: UserStatus = UserStatus.ACTIVE) -> list[User]:
+    async def users(self, status: UserStatus | None) -> list[User]:
         """
         Get a list of users associated with the client.
         """
@@ -272,7 +291,7 @@ class AsyncBreezewayClient(BaseBreezewayClient):
         data = await self._process_request(request)
         return [User.model_validate(user).attach_client(self) for user in data]
 
-    async def retrieve_unit(self, unit_id: int) -> Unit:
+    async def unit(self, unit_id: int) -> Unit:
         """
         Retrieve a unit by its Breezeway ID.
         """
@@ -280,7 +299,7 @@ class AsyncBreezewayClient(BaseBreezewayClient):
         data = await self._process_request(request)
         return Unit.model_validate(data).attach_client(self)
 
-    async def retrieve_user(self, user_id: int) -> User:
+    async def user(self, user_id: int) -> User:
         """
         Retrieve a user by their ID.
         """
@@ -296,16 +315,16 @@ class AsyncBreezewayClient(BaseBreezewayClient):
         data = await self._process_request(request)
         return UnitPhoto.model_validate(data)
 
-    async def units(self, **kwargs: Unpack[ListAllDict]) -> list[Unit]:
+    async def all_units(self, **kwargs: Unpack[ListAllDict]) -> list[Unit]:
         """
         Get a list of all units.
         Company ID is required for clients with multi-company access.
         """
-        paginated_units = await self.list_units(**kwargs)
+        paginated_units = await self.units(**kwargs)
         units = paginated_units.results
         if paginated_units.total_pages == 1:
             return units
-        tasks = [self.list_units(page=page, **kwargs) for page in range(2, paginated_units.total_pages + 1)]
+        tasks = [self.units(page=page, **kwargs) for page in range(2, paginated_units.total_pages + 1)]
         remaining_pages = await asyncio.gather(*tasks)
         for page in remaining_pages:
             units += page.results

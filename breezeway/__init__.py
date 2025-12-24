@@ -1,8 +1,9 @@
 from .breezeway_client import BreezewayClient, AsyncBreezewayClient
 from .models.company import Department
-from .models.task import Task
+from models.reservation import Reservation, ReservationType
+from .models.task import Task, TaskStatus
 from .models.unit import Unit, UnitNotes
-from .models.user import User
+from .models.user import User, UserRole
 
 __all__ = [
     # Clients
@@ -13,13 +14,19 @@ __all__ = [
 
     # People
     'User',
+    'UserRole',
+
+    # Reservation
+    'Reservation',
+    'ReservationType',
 
     # Property
     'Unit',
-    "UnitNotes",
+    'UnitNotes',
 
     # Task
-    'Task'
+    'Task',
+    'TaskStatus'
 ]
 
 # Package metadata
