@@ -18,11 +18,11 @@ import breezeway
 bw = breezeway.BreezewayClient(client_id='your_client_id', client_secret='your_client_secret')
 
 # Get tasks
-tasks = bw.get_tasks()
+tasks = bw.all_tasks()
 print(tasks)
 
 # Create a new task
-new_task = bw.create_task(property_id=12345, title='Inspect HVAC system')
+new_task = bw.create_task(unit_id=12345, title='Inspect HVAC system')
 print(new_task)
 ```
 

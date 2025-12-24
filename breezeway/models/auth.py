@@ -20,11 +20,11 @@ class JWTAuth(Auth):
 
     @staticmethod
     def _handle_response(resp: Response) -> None:
-        if resp.json() is None: # Breezeway returns 200 with empty body when client_secret is incorrect
+        if resp.json() is None: # Breezeway returns 200 with an empty body when client_secret is incorrect
             raise AuthenticationError()
         if 'error' not in resp.json():
             return None
-        if resp.json()['error'] == 'inactive client':  # Cant check by code because breezeway returns 200
+        if resp.json()['error'] == 'inactive client':  # Can't check by code because breezeway returns 200
             raise AuthenticationError('Inactive client. Check your credentials.')
         if resp.status_code == 429:
             raise RateLimitExceeded(resp.json())
@@ -58,7 +58,7 @@ class JWTAuth(Auth):
         self._refresh_token = body['refresh_token']
 
     def sync_auth_flow(self, request: Request) -> typing.Generator[Request, Response, None]:
-        if self._token_expires_at < time.time():  # if token is expired
+        if self._token_expires_at < time.time():  # if the token is expired
             if self._refresh_token:
                 response = yield self.build_refresh_token_request()
                 response.read()
@@ -73,7 +73,7 @@ class JWTAuth(Auth):
         yield request
 
     async def async_auth_flow(self, request: Request) -> typing.AsyncGenerator[Request, Response]:
-        if self._token_expires_at < time.time():  # if token is expired
+        if self._token_expires_at < time.time():  # if the token is expired
             if self._refresh_token:
                 response = yield self.build_refresh_token_request()
                 await response.aread()

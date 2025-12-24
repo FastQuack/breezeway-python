@@ -1,5 +1,5 @@
 from datetime import date
-from typing import TypedDict, Literal, Unpack, Any
+from typing import TypedDict, Literal, Unpack
 
 from httpx import Request
 

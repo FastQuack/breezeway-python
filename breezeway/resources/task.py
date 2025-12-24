@@ -1,5 +1,5 @@
 from datetime import time, date
-from typing import TypedDict, Unpack, Literal, Never
+from typing import TypedDict, Unpack, Literal
 
 from httpx import Request
 
@@ -26,7 +26,9 @@ class TaskCreateDict(TypedDict, total=False):
     assign_default_workers: bool
 
 
-class BaseTaskListDict(TypedDict, total=False):
+class TaskListDict(TypedDict, total=False):
+    home_id: int
+    reference_property_id: int
     type_department: Department
     scheduled_date: DateRange | str
     created_at: DateRange | str
@@ -40,15 +42,6 @@ class BaseTaskListDict(TypedDict, total=False):
     reference_company_id: str  # required if using cross-company access
 
 
-class TaskListWithHomeID(BaseTaskListDict):
-    home_id: int
-    reference_property_id: Never | None
-
-
-class TaskListWithReferencePropertyID(BaseTaskListDict):
-    reference_property_id: int
-    home_id: Never | None
-
 
 class TaskResource(BaseResource):
     def create_task(self, **kwargs: Unpack[TaskCreateDict]) -> Request:
@@ -58,7 +51,7 @@ class TaskResource(BaseResource):
         endpoint = 'public/inventory/v1/task'
         return self._build_request('POST', endpoint, payload=kwargs)
 
-    def list_tasks(self, **kwargs: Unpack[TaskListWithHomeID | TaskListWithReferencePropertyID]) -> Request:
+    def list_tasks(self, **kwargs: Unpack[TaskListDict]) -> Request:
         """
         Get a paginated list of tasks.
         Company ID is required for clients with multi-company access.

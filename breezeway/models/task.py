@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta, time, date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Dict
 
 from pydantic import Field
 
@@ -220,7 +219,7 @@ class TaskPhoto(BaseBreezewayModel):
 class TaskRequirement(BaseBreezewayModel):
     # Some of these fields can be None with edge cases
     action: str | list[str]  # Always a list for checklists, even when there is only one line
-    element_name: str | None  = Field(validation_alias='home_element_name', serialization_alias='home_element_name')  # Only populates when requirement is under a first level element
+    element_name: str | None  = Field(validation_alias='home_element_name', serialization_alias='home_element_name')  # Only populates when a requirement is under a first level element
     note: str | None
     photo_required: bool  # is False for photo requirements
     photos: list[str]  # List of urls

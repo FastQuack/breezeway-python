@@ -24,7 +24,7 @@ if TYPE_CHECKING:
     from .models.user import User, UserStatus
     from .resources.base import ListDict, ListAllDict
     from .resources.reservation import ReservationListDict
-    from .resources.task import TaskListWithHomeID, TaskListWithReferencePropertyID
+    from .resources.task import TaskListDict
     from .resources.unit import UnitCreateDict
 
 
@@ -124,7 +124,7 @@ class BreezewayClient(BaseBreezewayClient):
         data = self._process_request(request)
         return [Subdepartment.model_validate(subdepartment) for subdepartment in data]
 
-    def tasks(self, **kwargs: Unpack[TaskListWithHomeID | TaskListWithReferencePropertyID]) -> Paginated[Task]:
+    def tasks(self, **kwargs: Unpack[TaskListDict]) -> Paginated[Task]:
         """
         Get a paginated list of tasks.
         Company ID is required for clients with multi-company access.
