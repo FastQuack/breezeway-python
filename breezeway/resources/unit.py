@@ -2,10 +2,10 @@ from typing import TypedDict, Unpack
 
 from httpx import Request
 
-from .base import BaseResource, ListDict
+from .resource import BaseResource, ListDict
 from ..models.unit import UnitStatus, UnitNotes
 
-class UnitCreateDict(TypedDict):
+class UnitDict(TypedDict):
     name: str
     internal_code: str
     address1: str | None
@@ -30,13 +30,37 @@ class UnitCreateDict(TypedDict):
 
 
 class UnitResource(BaseResource):
-    def create_unit(self, **kwargs: Unpack[UnitCreateDict]) -> Request:
+
+    def __init__(self, base_url: str):
+        super().__init__(base_url)
+        self.tag = TagResource(base_url)
+
+    def create_unit(self, **kwargs: Unpack[UnitDict]) -> Request:
         """
-        Create a new property.
+        Create a new unit.
         Company ID is required for clients with multi-company access.
         """
         endpoint = '/public/inventory/v1/property'
         return self._build_request('POST', endpoint, payload=kwargs)
+
+    def delete_unit(self, unit_id: int) -> Request:
+        """
+        Unit has it's status set to deleted with removal of external id and any integration connection.
+        """
+        endpoint = f'/public/inventory/v1/property/{unit_id}/'
+        return self._build_request('DELETE', endpoint)
+
+    def get_unit_tags(self, unit_id: int) -> Request:
+        endpoint = f'public/inventory/v1/property/{unit_id}/tags'
+        return self._build_request('GET', endpoint)
+
+    def update_room_count(self, *, unit_id: int, num_bedrooms: int, num_bathrooms: int) -> Request:
+        """
+        Add (and only add) bedrooms and/or bathrooms to a unit
+        """
+        endpoint = f'/public/inventory/v1/property/{unit_id}/bedroom_bathroom_count'
+        payload = {'bathrooms': num_bathrooms, 'bedrooms': num_bedrooms}
+        return self._build_request('PATCH', endpoint, payload=payload)
 
     def list_units(self, **kwargs: Unpack[ListDict]) -> Request:
         """
@@ -45,16 +69,6 @@ class UnitResource(BaseResource):
         """
         endpoint = 'public/inventory/v1/property'
         return self._build_request('GET', endpoint, params=kwargs)
-
-    def list_unit_tags(self, company_id) -> Request:
-        """
-        List unit tags configured for a Breezeway company
-        Creation of company tags must be performed within the app.
-        Company ID is required for clients with multi-company access.
-        """
-        endpoint = f'public/inventory/v1/property/tags'
-        params = {'company_id': company_id}
-        return self._build_request('GET', endpoint, params=params)
 
     def retrieve_unit(self, unit_id: int) -> Request:
         """
@@ -66,4 +80,43 @@ class UnitResource(BaseResource):
     def update_default_photo(self, *, unit_id: int, photo_id: int) -> Request:
         endpoint = f'public/inventory/v1/property/{unit_id}/default_photo'
         payload = {'photo_id': photo_id}
+        return self._build_request('PATCH', endpoint, payload=payload)
+
+    def update_unit(self, *, unit_id: int, **kwargs: Unpack[UnitDict]) -> Request:
+        endpoint = f'public/inventory/v1/property/{unit_id}'
+        return self._build_request('PATCH', endpoint, payload=kwargs)
+
+
+class TagResource(BaseResource):
+
+    def add_tags(self, *, unit_id: int, tag_ids: list[int]) -> Request:
+        endpoint = f'public/inventory/v1/property/{unit_id}/tags'
+        payload = tag_ids
+        return self._build_request('POST', endpoint, payload=payload)
+
+    def delete_tags(self, *, unit_id: int, tag_ids: list[int]) -> Request:
+        endpoint = f'public/inventory/v1/property/{unit_id}/tags'
+        payload = tag_ids
+        return self._build_request('DELETE', endpoint, payload=payload)
+
+    def get_tags(self, *, unit_id: int) -> Request:
+        """
+        Get tags of the unit.
+        """
+        endpoint = f'public/inventory/v1/property/{unit_id}/tags'
+        return self._build_request('GET', endpoint)
+
+    def list_available_tags(self, *, company_id) -> Request:
+        """
+        List unit tags configured for a Breezeway company
+        Creation of company tags must be performed within the app.
+        Company ID is required for clients with multi-company access.
+        """
+        endpoint = f'public/inventory/v1/property/tags'
+        params = {'company_id': company_id}
+        return self._build_request('GET', endpoint, params=params)
+
+    def set_tags(self, *, unit_id: int, tag_ids: list[int]) -> Request:
+        endpoint = f'public/inventory/v1/property/{unit_id}/tags'
+        payload = tag_ids
         return self._build_request('PATCH', endpoint, payload=payload)

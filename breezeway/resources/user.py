@@ -1,6 +1,6 @@
 from httpx import Request
 
-from .base import BaseResource
+from .resource import BaseResource
 from ..models.user import UserStatus
 
 

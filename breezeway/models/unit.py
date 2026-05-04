@@ -92,37 +92,3 @@ class Unit(BaseUnit):
     reference_external_property_id: str | None = Field(frozen=True, exclude=True)
     reference_property_id: str | None = Field(frozen=True, exclude=True)
     status: UnitStatus
-
-    @property
-    def tags(self) -> list[UnitTag]:
-        return self.add_tags([])  # TODO: Test this breezeway API workaround
-
-    @tags.setter
-    def tags(self, tags: list[UnitTag]) -> None:
-        endpoint = f'public/inventory/v1/property/{self.id}/tags'
-        payload = [tag.id for tag in tags]
-        self._request('PATCH', endpoint, payload=payload)
-
-    def add_tag(self, tag: UnitTag) -> list[UnitTag]:
-        return self.add_tags([tag])
-
-    def add_tags(self, tags: list[UnitTag]) -> list[UnitTag]:
-        endpoint = f'public/inventory/v1/property/{self.id}/tags'
-        payload = [tag.id for tag in tags]
-        return [UnitTag.model_validate(tag) for tag in self._request('POST', endpoint, payload=payload)]
-
-    def delete_tag(self, tag: UnitTag) -> list[UnitTag]:
-        return self.delete_tags([tag])
-
-    def delete_tags(self, tags: list[UnitTag]) -> list[UnitTag]:
-        """Delete tags from a property."""
-        endpoint = f'public/inventory/v1/property/{self.id}/tags'
-        payload = [tag.id for tag in tags]
-        return [UnitTag.model_validate(tag) for tag in self._request('DELETE', endpoint, payload=payload)]
-
-    def save(self):
-        endpoint = f'public/inventory/v1/property/{self.id}'
-        updated_unit = Unit.model_validate(self._request('PATCH', endpoint, payload=self.model_dump()))
-        for attr, value in updated_unit.__dict__.items():
-            if hasattr(self, attr) and value is not None:
-                setattr(self, attr, value)

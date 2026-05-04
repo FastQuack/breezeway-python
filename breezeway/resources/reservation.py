@@ -3,7 +3,7 @@ from typing import TypedDict, Literal, Unpack
 
 from httpx import Request
 
-from .base import BaseResource
+from .resource import BaseResource
 
 class ReservationListDict(TypedDict, total=False):
     unit_id: int

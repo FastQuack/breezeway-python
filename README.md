@@ -15,7 +15,7 @@ pip install breezeway
 import breezeway
 
 # Initialize the client
-bw = breezeway.BreezewayClient(client_id='your_client_id', client_secret='your_client_secret')
+bw = breezeway.Breezeway(client_id='your_client_id', client_secret='your_client_secret')
 
 # Get tasks
 tasks = bw.all_tasks()

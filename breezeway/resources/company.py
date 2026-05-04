@@ -1,6 +1,6 @@
 from httpx import Request
 
-from .base import BaseResource
+from .resource import BaseResource
 
 
 class CompanyResource(BaseResource):
@@ -9,7 +9,7 @@ class CompanyResource(BaseResource):
         endpoint = '/public/inventory/v1/companies'
         return self._build_request('GET', endpoint)
 
-    def list_subdepartments(self, *, company_id, reference_company_id) -> Request:
+    def list_subdepartments(self, *, company_id: int | None = None, reference_company_id: int | None = None) -> Request:
         """
         Provides a list of subdepartments for the specified company.
         Creation of subdepartments can only be performed in the application.

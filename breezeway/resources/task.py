@@ -3,7 +3,7 @@ from typing import TypedDict, Unpack, Literal
 
 from httpx import Request
 
-from .base import BaseResource, DateRange
+from .resource import BaseResource, DateRange
 from ..models.task import Department, Priority, RateType, Requester
 
 
