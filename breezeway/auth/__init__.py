@@ -1,1 +1,1 @@
-from JWTAuth import JWTAuth
+from .JWTAuth import JWTAuth

@@ -3,13 +3,10 @@ from typing import TypedDict, Unpack, Literal
 
 from httpx import Request
 
-from .resource import BaseResource, DateRange
+from .base import BaseResource, DateRange
 from ..models.task import Department, Priority, RateType, Requester
 
-
-class TaskCreateDict(TypedDict, total=False):
-    home_id: int
-    reference_property_id: int
+class TaskDict(TypedDict, total=False):
     name: str
     type_department: Department
     type_priority: Priority
@@ -23,8 +20,11 @@ class TaskCreateDict(TypedDict, total=False):
     rate_paid: float
     rate_type: RateType
     requested_by: Requester
-    assign_default_workers: bool
 
+class TaskCreateDict(TaskDict, total=False):
+    home_id: int
+    reference_property_id: int
+    assign_default_workers: bool
 
 class TaskListDict(TypedDict, total=False):
     home_id: int
@@ -44,17 +44,74 @@ class TaskListDict(TypedDict, total=False):
 
 
 class TaskResource(BaseResource):
+
+    def add_comment(self, *, task_id: int, user_id: int, content: str) -> Request:
+        """
+        Add a comment to a task as a specific user.
+        """
+        endpoint = f'/public/inventory/v1/task/{task_id}/comments'
+        return self._build_request('POST', endpoint, payload={'company_people_id': user_id, 'comment': content})
+
+    def approve_task(self, *, task_id: int) -> Request:
+        """
+        Approve a task.
+        """
+        endpoint = f'/public/inventory/v1/task/{task_id}/approve'
+        return self._build_request('POST', endpoint)
+
+    def close_task(self, *, task_id: int) -> Request:
+        """
+        Close a task.
+        """
+        endpoint = f'/public/inventory/v1/task/{task_id}/close'
+        return self._build_request('POST', endpoint)
+
     def create_task(self, **kwargs: Unpack[TaskCreateDict]) -> Request:
         """
         Create a new task.
         """
-        endpoint = 'public/inventory/v1/task'
+        endpoint = '/public/inventory/v1/task'
         return self._build_request('POST', endpoint, payload=kwargs)
+
+    def delete_task(self, *, task_id: int) -> Request:
+        """
+        Mark a task as deleted.
+        """
+        endpoint = f'/public/inventory/v1/task/{task_id}'
+        return self._build_request('DELETE', endpoint)
 
     def list_tasks(self, **kwargs: Unpack[TaskListDict]) -> Request:
         """
         Get a paginated list of tasks.
         Company ID is required for clients with multi-company access.
         """
-        endpoint = 'public/inventory/v1/property'
+        endpoint = '/public/inventory/v1/task'
         return self._build_request('GET', endpoint, params=kwargs)
+
+    def reopen_task(self, *, task_id: int) -> Request:
+        """
+        Reopen a closed task.
+        """
+        endpoint = f'/public/inventory/v1/task/{task_id}/reopen'
+        return self._build_request('POST', endpoint)
+
+    def retrieve_task(self, task_id: int) -> Request:
+        """
+        Retrieve a specific task by ID.
+        """
+        endpoint = f'/public/inventory/v1/task/{task_id}'
+        return self._build_request('GET', endpoint)
+
+    def retrieve_task_comments(self, task_id: int) -> Request:
+        """
+        Retrieve comments for a specific task by ID.
+        """
+        endpoint = f'/public/inventory/v1/task/{task_id}/comments'
+        return self._build_request('GET', endpoint)
+
+    def update_task(self, *, task_id: int, **kwargs: Unpack[TaskDict]) -> Request:
+        """
+        Update an existing task.
+        """
+        endpoint = f'/public/inventory/v1/task/{task_id}'
+        return self._build_request('PATCH', endpoint, payload=kwargs)

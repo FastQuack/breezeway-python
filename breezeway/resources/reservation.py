@@ -3,7 +3,7 @@ from typing import TypedDict, Literal, Unpack
 
 from httpx import Request
 
-from .resource import BaseResource
+from .base import BaseResource
 
 class ReservationListDict(TypedDict, total=False):
     unit_id: int
@@ -33,7 +33,7 @@ class ReservationListDict(TypedDict, total=False):
 class ReservationResource(BaseResource):
     def list_reservations(self, **kwargs: Unpack[ReservationListDict]) -> Request:
         """Get a paginated list of reservations."""
-        endpoint = 'public/reservation/v1/reservation'
+        endpoint = '/public/reservation/v1/reservation'
         if 'unit_id' in kwargs:
              kwargs['property_id'] = kwargs.pop('unit_id')
         return self._build_request('GET', endpoint, params=kwargs)

@@ -2,7 +2,7 @@ from typing import TypedDict, Unpack
 
 from httpx import Request
 
-from .resource import BaseResource, ListDict
+from .base import BaseResource, ListDict
 from ..models.unit import UnitStatus, UnitNotes
 
 class UnitDict(TypedDict):
@@ -51,7 +51,7 @@ class UnitResource(BaseResource):
         return self._build_request('DELETE', endpoint)
 
     def get_unit_tags(self, unit_id: int) -> Request:
-        endpoint = f'public/inventory/v1/property/{unit_id}/tags'
+        endpoint = f'/public/inventory/v1/property/{unit_id}/tags'
         return self._build_request('GET', endpoint)
 
     def update_room_count(self, *, unit_id: int, num_bedrooms: int, num_bathrooms: int) -> Request:
@@ -67,23 +67,23 @@ class UnitResource(BaseResource):
         Get a paginated list of units.
         Company ID is required for clients with multi-company access.
         """
-        endpoint = 'public/inventory/v1/property'
+        endpoint = '/public/inventory/v1/property'
         return self._build_request('GET', endpoint, params=kwargs)
 
     def retrieve_unit(self, unit_id: int) -> Request:
         """
         Retrieve a unit by its Breezeway ID.
         """
-        endpoint = f'public/inventory/v1/property/{unit_id}'
+        endpoint = f'/public/inventory/v1/property/{unit_id}'
         return self._build_request('GET', endpoint)
 
     def update_default_photo(self, *, unit_id: int, photo_id: int) -> Request:
-        endpoint = f'public/inventory/v1/property/{unit_id}/default_photo'
+        endpoint = f'/public/inventory/v1/property/{unit_id}/default_photo'
         payload = {'photo_id': photo_id}
         return self._build_request('PATCH', endpoint, payload=payload)
 
     def update_unit(self, *, unit_id: int, **kwargs: Unpack[UnitDict]) -> Request:
-        endpoint = f'public/inventory/v1/property/{unit_id}'
+        endpoint = f'/public/inventory/v1/property/{unit_id}'
         return self._build_request('PATCH', endpoint, payload=kwargs)
 
 
@@ -95,7 +95,7 @@ class TagResource(BaseResource):
         return self._build_request('POST', endpoint, payload=payload)
 
     def delete_tags(self, *, unit_id: int, tag_ids: list[int]) -> Request:
-        endpoint = f'public/inventory/v1/property/{unit_id}/tags'
+        endpoint = f'/public/inventory/v1/property/{unit_id}/tags'
         payload = tag_ids
         return self._build_request('DELETE', endpoint, payload=payload)
 
@@ -103,7 +103,7 @@ class TagResource(BaseResource):
         """
         Get tags of the unit.
         """
-        endpoint = f'public/inventory/v1/property/{unit_id}/tags'
+        endpoint = f'/public/inventory/v1/property/{unit_id}/tags'
         return self._build_request('GET', endpoint)
 
     def list_available_tags(self, *, company_id) -> Request:
@@ -112,11 +112,11 @@ class TagResource(BaseResource):
         Creation of company tags must be performed within the app.
         Company ID is required for clients with multi-company access.
         """
-        endpoint = f'public/inventory/v1/property/tags'
+        endpoint = f'/public/inventory/v1/property/tags'
         params = {'company_id': company_id}
         return self._build_request('GET', endpoint, params=params)
 
     def set_tags(self, *, unit_id: int, tag_ids: list[int]) -> Request:
-        endpoint = f'public/inventory/v1/property/{unit_id}/tags'
+        endpoint = f'/public/inventory/v1/property/{unit_id}/tags'
         payload = tag_ids
         return self._build_request('PATCH', endpoint, payload=payload)

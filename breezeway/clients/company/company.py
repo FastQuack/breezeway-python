@@ -5,7 +5,6 @@ from breezeway.models.company import Company, Subdepartment, Template
 if TYPE_CHECKING:
     from breezeway.breezeway import BreezewayClient, AsyncBreezewayClient
 
-
 class CompanyClient:
     def __init__(self, client: BreezewayClient):
         self._client = client

@@ -1,1 +1,1 @@
-from company import BaseCompanyClient, CompanyClient, AsyncCompanyClient
+from .company import CompanyClient, AsyncCompanyClient

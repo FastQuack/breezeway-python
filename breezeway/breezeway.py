@@ -6,8 +6,10 @@ from typing import Unpack, NoReturn, Any, TYPE_CHECKING
 
 from httpx import AsyncClient, Client, Request, Response
 
-from .auth.JWTAuth import JWTAuth
-from .clients import CompanyClient, AsyncCompanyClient
+from .auth import JWTAuth
+from .clients.company import CompanyClient, AsyncCompanyClient
+from .clients.reservation import ReservationClient, AsyncReservationClient
+from .clients.task import TaskClient
 from .clients.unit import UnitClient, AsyncUnitClient
 from .entities.entity import Entity, AsyncEntity
 from .errors import *
@@ -71,7 +73,7 @@ class BreezewayClient(BaseBreezewayClient):
             self,
             client_id: str = None,
             client_secret: str = None,
-            base_url: str = 'https://api.breezeway.com',
+            base_url: str = 'https://api.breezeway.io',
             company_id: int | None = None
     ):
         super().__init__(client_id, client_secret, base_url, company_id)
@@ -87,7 +89,7 @@ class AsyncBreezewayClient(BaseBreezewayClient):
             self,
             client_id: str = None,
             client_secret: str = None,
-            base_url: str = 'https://api.breezeway.com',
+            base_url: str = 'https://api.breezeway.io',
             company_id: int | None = None
     ):
         super().__init__(client_id, client_secret, base_url, company_id)
@@ -103,12 +105,14 @@ class Breezeway:
             self,
             client_id: str = None,
             client_secret: str = None,
-            base_url: str = 'https://api.breezeway.com',
+            base_url: str = 'https://api.breezeway.io',
             company_id: int | None = None
     ):
         self._client = BreezewayClient(client_id, client_secret, base_url, company_id)
         Entity.configure(self)
         self.company = CompanyClient(self._client)
+        self.reservation = ReservationClient(self._client)
+        self.task = TaskClient(self._client)
         self.unit = UnitClient(self._client)
 
 
@@ -152,12 +156,13 @@ class AsyncBreezeway:
             self,
             client_id: str = None,
             client_secret: str = None,
-            base_url: str = 'https://api.breezeway.com',
+            base_url: str = 'https://api.breezeway.io',
             company_id: int | None = None
     ):
         self._client = AsyncBreezewayClient(client_id, client_secret, base_url, company_id)
         AsyncEntity.configure(self)
         self.company = AsyncCompanyClient(self._client)
+        self.reservation = AsyncReservationClient(self._client)
         self.unit = AsyncUnitClient(self._client)
 
     async def reservations(self, **kwargs: Unpack[ReservationListDict]) -> Paginated[Reservation]:
