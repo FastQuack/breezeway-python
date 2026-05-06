@@ -182,7 +182,7 @@ class TypeCost(StrEnum):
         }
 
 
-class Assignment(BaseBreezewayModel):
+class Assignee(BaseBreezewayModel):
     id: int
     name: str
     user_id: int = Field(validation_alias='assignee_id', serialization_alias='assignee_id')
@@ -252,7 +252,7 @@ class Task(BaseBreezewayModel):
     model_config.update(frozen=False)
     id: int = Field(frozen=True)
     title: str = Field(validation_alias='name', serialization_alias='name')
-    assignments: list[Assignment]
+    assignees: list[Assignee] = Field(validation_alias='assignments', serialization_alias='assignments')
     bill_to: Payor | None
     costs: list[Cost]
     created_at: datetime
