@@ -17,13 +17,28 @@ import breezeway
 # Initialize the client
 bw = breezeway.Breezeway(client_id='your_client_id', client_secret='your_client_secret')
 
-# Get tasks
-tasks = bw.all_tasks()
-print(tasks)
+# Get companies associated with the client
+companies = bw.company.list_all()
+for company in companies:
+    print(company.name)
 
-# Create a new task
-new_task = bw.create_task(unit_id=12345, title='Inspect HVAC system')
-print(new_task)
+# Get task information
+task = bw.task.get(task_id=12345)
+print(
+    bw.unit.get(unit_id=task.unit_id).name,
+    task.status,
+    task.title,
+    task.description
+)
+
+# Upload an attachment
+bw.task.upload_attachment(task_id=12345, file_path='path/to/file.jpg')
+```
+
+### Available as an async client too
+```python
+import breezeway
+bw = breezeway.AsyncBreezeway(client_id='your_client_id', client_secret='your_client_secret')
 ```
 
 ## Contributing
