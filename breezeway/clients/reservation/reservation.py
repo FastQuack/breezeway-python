@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from breezeway.models.base import Paginated
 from breezeway.models.reservation import Reservation
 
 if TYPE_CHECKING:
@@ -10,10 +11,10 @@ class ReservationClient:
     def __init__(self, client: BreezewayClient):
         self._client = client
 
-    def list_all(self) -> list[Reservation]:
+    def list_page(self) -> Paginated[Reservation]:
         request = self._client.resource.reservation.list_reservations()
         reservations = self._client.process_request(request)
-        return [Reservation.model_validate(reservation) for reservation in reservations]
+        return Paginated[Reservation].model_validate(reservations)
 
     def get(self, reservation_id: int) -> Reservation:
         request = self._client.resource.reservation.retrieve_reservation(reservation_id=reservation_id)
@@ -25,10 +26,10 @@ class AsyncReservationClient:
     def __init__(self, client: AsyncBreezewayClient):
         self._client = client
 
-    async def list_all(self) -> list[Reservation]:
+    async def list_page(self) -> Paginated[Reservation]:
         request = self._client.resource.reservation.list_reservations()
         reservations = await self._client.process_request(request)
-        return [Reservation.model_validate(reservation) for reservation in reservations]
+        return Paginated[Reservation].model_validate(reservations)
 
     async def get(self, reservation_id: int) -> Reservation:
         request = self._client.resource.reservation.retrieve_reservation(reservation_id=reservation_id)
