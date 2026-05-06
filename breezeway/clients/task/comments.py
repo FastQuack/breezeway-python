@@ -18,7 +18,7 @@ class CommentClient:
         comment = self._client.process_request(request)
         return Comment.model_validate(comment)
 
-    def list(self, * , task: Task) -> list[Comment]:
+    def list_all(self, * , task: Task) -> list[Comment]:
         request = self._client.resource.task.list_comments(task_id=task.id)
         comments = self._client.process_request(request)
         return [Comment.model_validate(comment) for comment in comments]
@@ -33,7 +33,7 @@ class AsyncCommentClient:
         comment = await self._client.process_request(request)
         return Comment.model_validate(comment)
 
-    async def list(self, * , task: Task) -> list[Comment]:
+    async def list_all(self, * , task: Task) -> list[Comment]:
         request = self._client.resource.task.list_comments(task_id=task.id)
         comments = await self._client.process_request(request)
         return [Comment.model_validate(comment) for comment in comments]

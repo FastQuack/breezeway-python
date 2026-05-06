@@ -211,7 +211,7 @@ class TaskCreator(BaseBreezewayModel):
     name: str
 
 
-class TaskPhoto(BaseBreezewayModel):
+class TaskAttachment(BaseBreezewayModel):
     id: int
     url: str
 
@@ -262,7 +262,7 @@ class Task(BaseBreezewayModel):
     finished_at: datetime | None
     finished_by: dict  # TODO use a model from people?
     paused: bool
-    photos: list[TaskPhoto]
+    attachments: list[TaskAttachment] = Field(validation_alias='photos', serialization_alias='photos')
     priority: Priority = Field(validation_alias='type_priority', serialization_alias='type_priority')
     rate_paid: str  # example: '0.05 USD'
     rate_type: RateType

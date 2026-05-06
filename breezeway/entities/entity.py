@@ -21,7 +21,7 @@ class Entity[T: BaseBreezewayModel]:
 
 
 class AsyncEntity[T: BaseBreezewayModel]:
-    _client: AsyncBreezeway
+    _client: AsyncBreezeway | None = None
 
     def __init__(self, model: T):
         self.model: T = model

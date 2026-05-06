@@ -1,9 +1,9 @@
 from datetime import time, date
-from typing import TypedDict, Unpack, Literal
+from typing import TypedDict, Unpack, Literal, Never, overload
 
 from httpx import Request
 
-from .base import BaseResource, DateRange
+from .base import BaseResource, DateRange, RequestFiles
 from ..models.task import Department, Priority, RateType, Requester
 
 class TaskDict(TypedDict, total=False):
@@ -115,3 +115,20 @@ class TaskResource(BaseResource):
         """
         endpoint = f'/public/inventory/v1/task/{task_id}'
         return self._build_request('PATCH', endpoint, payload=kwargs)
+
+    def upload_attachment(
+            self, *,
+            task_id: int,
+            file_name: str,
+            file_bytes: bytes,
+            include_in_report: bool
+    ) -> Request:
+        """
+        Upload an attachment for a task.
+
+        The file content must be provided as bytes so this method performs no
+        file-system I/O and can be used safely from both sync and async clients.
+        """
+        endpoint = f'/public/inventory/v1/task/{task_id}/photos'
+        file = {'file': (file_name, file_bytes)}
+        return self._build_request('POST', endpoint, files=file, payload={'include_in_report': include_in_report})

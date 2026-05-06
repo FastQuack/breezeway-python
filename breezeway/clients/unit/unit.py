@@ -9,7 +9,7 @@ from breezeway.models.unit import Unit, UnitPhoto
 if TYPE_CHECKING:
     from typing import Unpack
     from breezeway.breezeway import BreezewayClient, AsyncBreezewayClient
-    from breezeway.resources.resource import ListAllDict, ListDict
+    from breezeway.resources.base import ListAllDict, ListDict
     from breezeway.resources.unit import UnitDict
 
 
@@ -23,10 +23,10 @@ class UnitClient:
         Get a list of all units.
         Company ID is required for clients with multi-company access.
         """
-        paginated_units = self.list(**kwargs)
+        paginated_units = self.list_page(**kwargs)
         units = paginated_units.results
         for page in range(2, paginated_units.total_pages + 1):
-            units += self.list(page=page, **kwargs).results
+            units += self.list_page(page=page, **kwargs).results
         return units
 
     def create(self, **kwargs: Unpack[UnitDict]) -> Unit:
@@ -46,7 +46,7 @@ class UnitClient:
         data = self._client.process_request(request)
         return Unit.model_validate(data)
 
-    def list(self, **kwargs: Unpack[ListDict]) -> Paginated[Unit]:
+    def list_page(self, **kwargs: Unpack[ListDict]) -> Paginated[Unit]:
         """
         Get a paginated list of units.
         Company ID is required for clients with multi-company access.
@@ -85,11 +85,11 @@ class AsyncUnitClient:
         Get a list of all units.
         Company ID is required for clients with multi-company access.
         """
-        paginated_units = await self.list(**kwargs)
+        paginated_units = await self.list_page(**kwargs)
         units = paginated_units.results
         if paginated_units.total_pages == 1:
             return units
-        tasks = [self.list(page=page, **kwargs) for page in range(2, paginated_units.total_pages + 1)]
+        tasks = [self.list_page(page=page, **kwargs) for page in range(2, paginated_units.total_pages + 1)]
         remaining_pages = await asyncio.gather(*tasks)
         for page in remaining_pages:
             units += page.results
@@ -112,7 +112,7 @@ class AsyncUnitClient:
         data = await self._client.process_request(request)
         return Unit.model_validate(data)
 
-    async def list(self, **kwargs: Unpack[ListDict]) -> Paginated[Unit]:
+    async def list_page(self, **kwargs: Unpack[ListDict]) -> Paginated[Unit]:
         """
         Get a paginated list of units.
         Company ID is required for clients with multi-company access.

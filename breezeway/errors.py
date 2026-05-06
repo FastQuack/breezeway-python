@@ -2,14 +2,32 @@ from datetime import datetime
 
 
 class APIClientError(Exception):
-    """Base class for all Breezeway client errors."""
+    """
+    Base class for all Breezeway client errors.
+    """
     pass
 
-class AuthenticationError(APIClientError): pass
+class AuthenticationError(APIClientError):
+    """
+    Error raised when authentication fails.
+    """
+    pass
 
-class MultipleCompaniesError(APIClientError): pass
+class InvalidAttachmentError(APIClientError):
+    """
+    Error raised when an invalid attachment is provided.
+    """
+    pass
 
-class NoCompaniesError(APIClientError): pass
+class MultipleCompaniesError(APIClientError):
+    """
+    Error raised when company_id is not provided,
+    and there are multiple companies associated with the client.
+    """
+    pass
+
+class NoCompaniesError(APIClientError):
+    pass
 
 class NotFoundError(APIClientError): pass
 

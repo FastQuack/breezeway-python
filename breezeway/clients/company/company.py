@@ -9,7 +9,7 @@ class CompanyClient:
     def __init__(self, client: BreezewayClient):
         self._client = client
 
-    def list(self) -> list[Company]:
+    def list_all(self) -> list[Company]:
         """Get all companies associated with the client."""
         request = self._client.resource.company.list_companies()
         companies = self._client.process_request(request)
@@ -38,7 +38,7 @@ class AsyncCompanyClient:
     def __init__(self, client: AsyncBreezewayClient):
         self._client = client
 
-    async def list(self) -> list[Company]:
+    async def list_all(self) -> list[Company]:
         """Get all companies associated with the client."""
         request = self._client.resource.company.list_companies()
         companies = await self._client.process_request(request)

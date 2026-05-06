@@ -46,7 +46,7 @@ class UnitTagClient:
         tags = self._client.process_request(request)
         return [UnitTag.model_validate(tag) for tag in tags]
 
-    def list(self, *, company_id: int | None = None) -> list[UnitTag]:
+    def list_all(self, *, company_id: int | None = None) -> list[UnitTag]:
         """
         List unit tags configured for a Breezeway company
         Creation of company tags must be performed within the app.
@@ -97,7 +97,7 @@ class AsyncUnitTagClient:
         tags = await self._client.process_request(request)
         return [UnitTag.model_validate(tag) for tag in tags]
 
-    async def list(self, *, company_id: int | None = None) -> list[UnitTag]:
+    async def list_all(self, *, company_id: int | None = None) -> list[UnitTag]:
         """
         List unit tags configured for a Breezeway company
         Creation of company tags must be performed within the app.

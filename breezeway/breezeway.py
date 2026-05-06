@@ -9,7 +9,7 @@ from httpx import AsyncClient, Client, Request, Response
 from .auth import JWTAuth
 from .clients.company import CompanyClient, AsyncCompanyClient
 from .clients.reservation import ReservationClient, AsyncReservationClient
-from .clients.task import TaskClient
+from .clients.task import TaskClient, AsyncTaskClient
 from .clients.unit import UnitClient, AsyncUnitClient
 from .entities.entity import Entity, AsyncEntity
 from .errors import *
@@ -51,6 +51,8 @@ class BaseBreezewayClient(ABC):
                 raise UnauthorizedError(resp.json()['description'])
             if resp.status_code == 404:
                 raise NotFoundError('Resource not found. Are you using the correct endpoint?')
+            if resp.status_code == 422:
+                raise InvalidAttachmentError(resp.json()['description'])
             if resp.status_code == 429:
                 raise RateLimitExceeded(resp.json())
             if resp.json() and 'description' in resp.json():
@@ -163,6 +165,7 @@ class AsyncBreezeway:
         AsyncEntity.configure(self)
         self.company = AsyncCompanyClient(self._client)
         self.reservation = AsyncReservationClient(self._client)
+        self.task = AsyncTaskClient(self._client)
         self.unit = AsyncUnitClient(self._client)
 
     async def reservations(self, **kwargs: Unpack[ReservationListDict]) -> Paginated[Reservation]:
