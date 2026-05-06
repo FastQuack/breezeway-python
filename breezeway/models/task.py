@@ -251,7 +251,7 @@ class Task(BaseBreezewayModel):
     model_config = BaseBreezewayModel.model_config.copy()
     model_config.update(frozen=False)
     id: int = Field(frozen=True)
-    name: str  # Title
+    title: str = Field(validation_alias='name', serialization_alias='name')
     assignments: list[Assignment]
     bill_to: Payor | None
     costs: list[Cost]

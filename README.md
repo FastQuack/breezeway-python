@@ -25,7 +25,7 @@ for company in companies:
 # Get task information
 task = bw.task.get(task_id=12345)
 print(
-    bw.unit.get(unit_id=task.unit_id).name,
+    bw.unit.get(unit_id=task.unit_id).title,
     task.status,
     task.title,
     task.description
