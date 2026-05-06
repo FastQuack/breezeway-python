@@ -11,6 +11,7 @@ from .clients.company import CompanyClient, AsyncCompanyClient
 from .clients.reservation import ReservationClient, AsyncReservationClient
 from .clients.task import TaskClient, AsyncTaskClient
 from .clients.unit import UnitClient, AsyncUnitClient
+from .clients.user.user import UserClient, AsyncUserClient
 from .entities.entity import Entity, AsyncEntity
 from .errors import *
 from .resources.reservation import ReservationResource
@@ -116,6 +117,7 @@ class Breezeway:
         self.reservation = ReservationClient(self._client)
         self.task = TaskClient(self._client)
         self.unit = UnitClient(self._client)
+        self.user = UserClient(self._client)
 
 
     def reservations(self, **kwargs: Unpack[ReservationListDict]) -> Paginated[Reservation]:
@@ -167,6 +169,7 @@ class AsyncBreezeway:
         self.reservation = AsyncReservationClient(self._client)
         self.task = AsyncTaskClient(self._client)
         self.unit = AsyncUnitClient(self._client)
+        self.user = AsyncUserClient(self._client)
 
     async def reservations(self, **kwargs: Unpack[ReservationListDict]) -> Paginated[Reservation]:
         """
