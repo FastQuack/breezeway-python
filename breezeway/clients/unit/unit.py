@@ -18,7 +18,7 @@ class UnitClient:
         self._client = client
         self.tag = UnitTagClient(client)
 
-    def all(self, **kwargs: Unpack[ListAllDict]) -> list[Unit]:
+    def list_all(self, **kwargs: Unpack[ListAllDict]) -> list[Unit]:
         """
         Get a list of all units.
         Company ID is required for clients with multi-company access.
@@ -80,7 +80,7 @@ class AsyncUnitClient:
         self._client = client
         self.tag = AsyncUnitTagClient(client)
 
-    async def all(self, **kwargs: Unpack[ListAllDict]) -> list[Unit]:
+    async def list_all(self, **kwargs: Unpack[ListAllDict]) -> list[Unit]:
         """
         Get a list of all units.
         Company ID is required for clients with multi-company access.
