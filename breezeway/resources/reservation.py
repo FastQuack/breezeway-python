@@ -26,7 +26,7 @@ class ReservationListDict(TypedDict, total=False):
     updated_at_ge: date
     limit: int
     page: int
-    sort_by: str
+    sort_by: Literal['created_at']
     sort_order: Literal['desc', 'asc']
     company_id: int  # required if using cross-company access
 
@@ -37,3 +37,8 @@ class ReservationResource(BaseResource):
         if 'unit_id' in kwargs:
              kwargs['property_id'] = kwargs.pop('unit_id')
         return self._build_request('GET', endpoint, params=kwargs)
+
+    def retrieve_reservation(self, reservation_id: int) -> Request:
+        """Retrieve a reservation by its Breezeway ID."""
+        endpoint = f'/public/reservation/v1/reservation/{reservation_id}'
+        return self._build_request('GET', endpoint)
