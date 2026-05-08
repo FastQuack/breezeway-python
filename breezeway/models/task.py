@@ -119,6 +119,9 @@ class TaskRequirementType(StrEnum):
 class TaskStatus(StrEnum):
     DRAFTED = 'drafted'
     CREATED = 'created'
+    PENDING_APPROVAL = 'pending_approval'
+    REQUEST_REJECTED = 'request_rejected'
+    REQUEST_APPROVED = 'request_approved'
     IN_PROGRESS = 'in_progress'
     FINISHED = 'finished'
     CLOSED = 'closed'
@@ -130,6 +133,9 @@ class TaskStatus(StrEnum):
         return {
             TaskStatus.DRAFTED: "Drafted",
             TaskStatus.CREATED: "Created",
+            TaskStatus.PENDING_APPROVAL: "Pending approval",
+            TaskStatus.REQUEST_REJECTED: "Request rejected",
+            TaskStatus.REQUEST_APPROVED: "Request approved",
             TaskStatus.IN_PROGRESS: "In Progress",
             TaskStatus.FINISHED: "Finished",
             TaskStatus.CLOSED: "Closed",
