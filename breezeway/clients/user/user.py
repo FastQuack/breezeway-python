@@ -11,7 +11,7 @@ class UserClient:
 
     def list_all(self, user_status: UserStatus = UserStatus.ACTIVE) -> list[User]:
         """Get users associated with the client."""
-        request = self._client.resource.user.list_users()
+        request = self._client.resource.user.list_users(status=user_status)
         users = self._client.process_request(request)
         return [User.model_validate(user) for user in users]
 
@@ -28,7 +28,7 @@ class AsyncUserClient:
 
     async     def list_all(self, user_status: UserStatus = UserStatus.ACTIVE) -> list[User]:
         """Get users associated with the client."""
-        request = self._client.resource.user.list_users()
+        request = self._client.resource.user.list_users(status=user_status)
         users = await self._client.process_request(request)
         return [User.model_validate(user) for user in users]
 
