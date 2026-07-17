@@ -1,6 +1,6 @@
 [project]
 name = "breezeway"
-version = "0.1.1a4"
+version = "0.1.1a5"
 description = "Library for interacting with Breezeway's API."
 license = { text = "MIT" }
 readme = "README.md"

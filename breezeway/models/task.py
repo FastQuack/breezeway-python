@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, time, date
 from decimal import Decimal
 from enum import StrEnum
 
-from pydantic import Field
+from pydantic import AliasPath, Field
 
 from .base import BaseBreezewayModel
 from .company import Department, Subdepartment
@@ -57,13 +57,13 @@ class Priority(StrEnum):
 
 
 class RateType(StrEnum):
-    HOUR = 'hour'
+    HOURLY = 'hourly'
     PIECE = 'piece'
 
     @property
     def name(self) -> str:
         return {
-            RateType.HOUR: 'hourly',
+            RateType.HOURLY: 'hourly',
             RateType.PIECE: 'piece'
         }[self]
 
@@ -266,11 +266,11 @@ class Task(BaseBreezewayModel):
     department: Department = Field(validation_alias='type_department', serialization_alias='type_department')
     description: str | None
     finished_at: datetime | None
-    finished_by: dict  # TODO use a model from people?
+    finished_by: dict | None = None  # TODO use a model from people?
     paused: bool
     attachments: list[TaskAttachment] = Field(validation_alias='photos', serialization_alias='photos')
     priority: Priority = Field(validation_alias='type_priority', serialization_alias='type_priority')
-    rate_paid: str  # example: '0.05 USD'
+    rate_paid: str | None # example: '0.05 USD'
     rate_type: RateType
     reference_property_id: str | None
     report_url: str
@@ -278,8 +278,8 @@ class Task(BaseBreezewayModel):
     scheduled_date: date | None
     scheduled_time: time | None
     started_at: datetime | None
-    status: TaskStatus = Field(validation_alias='type_task_status', serialization_alias='type_task_status')
-    subdepartments: list[Subdepartment]
+    status: TaskStatus = Field(validation_alias=AliasPath('type_task_status', 'code'), serialization_alias='type_task_status')
+    subdepartments: list[Subdepartment] = Field(default_factory=list)
     supplies: list[TaskSupply]
     task_tags: list[TaskTag] # TODO: tags and task_tags are essentially the same thing
     template_id: int | None
