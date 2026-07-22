@@ -207,8 +207,8 @@ class Cost(BaseBreezewayModel):
     id: int
     amount: Decimal = Field(validation_alias='cost', serialization_alias='cost')
     created_at: datetime
-    description: str
-    category: TypeCost = Field(validation_alias='type_cost', serialization_alias='type_cost')
+    description: str | None
+    category: TypeCost = Field(validation_alias=AliasPath('type_cost', 'code'), serialization_alias='type_cost')
     updated_at: datetime | None
 
 
