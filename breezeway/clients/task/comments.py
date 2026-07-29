@@ -34,6 +34,6 @@ class AsyncCommentClient:
         return Comment.model_validate(comment)
 
     async def list_all(self, * , task: Task) -> list[Comment]:
-        request = self._client.resource.task.list_comments(task_id=task.id)
+        request = self._client.resource.task.retrieve_task_comments(task_id=task.id)
         comments = await self._client.process_request(request)
         return [Comment.model_validate(comment) for comment in comments]

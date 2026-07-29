@@ -58,6 +58,19 @@ class TaskClient:
         page = self._client.process_request(request)
         return Paginated[Task].model_validate(page)
 
+
+    def list_all(self, **kwargs: Unpack[TaskListDict]) -> list[Task]:
+        """
+        List all tasks for a unit.
+        When retrieving multiple tasks, include either home_id or reference_property_id
+        """
+        paginated_tasks = self.list_page(**kwargs)
+        tasks = paginated_tasks.results
+        for page in range(2, paginated_tasks.total_pages + 1):
+            tasks += self.list_page(page=page, **kwargs).results
+        return tasks
+
+
     def get(self, task_id: int) -> Task:
         """
         Retrieve a task
@@ -147,6 +160,22 @@ class AsyncTaskClient:
         request = self._client.resource.task.list_tasks(**kwargs)
         page = await self._client.process_request(request)
         return Paginated[Task].model_validate(page)
+
+
+    async def list_all(self, **kwargs: Unpack[TaskListDict]) -> list[Task]:
+        """
+        List all tasks for a unit.
+        When retrieving multiple tasks, include either home_id or reference_property_id
+        """
+        paginated_tasks = await self.list_page(**kwargs)
+        tasks = paginated_tasks.results
+        if paginated_tasks.total_pages == 1:
+            return tasks
+        async_tasks = [self.list_page(page=page, **kwargs) for page in range(2, paginated_tasks.total_pages + 1)]
+        remaining_pages = await asyncio.gather(*async_tasks)
+        for page in remaining_pages:
+            tasks += page.results
+        return tasks
 
     async def get(self, task_id: int) -> Task:
         """
