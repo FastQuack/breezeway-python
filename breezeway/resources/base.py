@@ -1,4 +1,5 @@
 from abc import ABC
+from dataclasses import dataclass
 from datetime import date
 from typing import Literal, Mapping, Any, NamedTuple, TypedDict, BinaryIO, Never
 
@@ -38,8 +39,8 @@ class BaseResource(ABC):
             files=files
         )
 
-
-class DateRange(NamedTuple):
+@dataclass
+class DateRange:
     start: date
     end: date
 
